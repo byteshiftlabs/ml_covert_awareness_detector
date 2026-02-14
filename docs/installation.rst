@@ -42,8 +42,8 @@ Step 3: Clone the Repository
 .. code-block:: bash
 
    sudo apt install git
-   git clone https://github.com/yourusername/consciousness_detector.git
-   cd consciousness_detector
+   git clone https://github.com/your-username/covert-awareness-detector.git
+   cd covert-awareness-detector
 
 
 Step 4: Create Virtual Environment

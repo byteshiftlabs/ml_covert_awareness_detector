@@ -52,7 +52,7 @@ Download data for 3 subjects to test everything works:
 
 .. code-block:: bash
 
-   cd ~/Projects/consciousness_detector
+   cd covert-awareness-detector
    
    python download_dataset.py \
        --output-dir ./data \
