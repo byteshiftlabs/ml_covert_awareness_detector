@@ -2,139 +2,63 @@
 Feature Extraction
 ==================
 
-This document explains how the project extracts meaningful features from
-fMRI connectivity matrices for consciousness classification.
-
-.. contents:: Table of Contents
-   :local:
-   :depth: 2
+This page summarizes the feature set used by the repository's classifier.
 
 
-What Are We Extracting?
-=======================
+Scope
+=====
 
-The input is a **connectivity matrix**: a table where each cell contains a
-number representing how strongly two brain regions are synchronised. The
-matrix has 446 rows and 446 columns (one per brain region), so there are
-roughly 99,000 unique pairs of regions.
-
-Raw connectivity matrices are too large and noisy to feed directly into a
-classifier. Feature extraction condenses them into a small set of numbers
-that summarise how the brain is organised.
+Huang et al. (2018) used task-based fMRI activation as the main evidence
+standard. This repository instead turns connectivity matrices into
+cross-subject machine-learning inputs.
 
 
-The Key Metric: ISD
-====================
+Inputs
+======
 
-The project's central feature is the **Integration-Segregation Difference
-(ISD)**, derived from the reference paper's MATLAB code. It measures the
-balance between two properties of brain networks:
+The repository starts with a **446 x 446 connectivity matrix** for each
+subject-condition block. Each entry says how strongly two brain regions vary
+together across time after motion filtering.
 
-- **Integration (efficiency)**: How easily information can travel between
-  any two brain regions. High efficiency means any region can communicate
-  with any other region through short paths.
-
-- **Segregation (clustering)**: How much brain regions form tight local
-  groups where neighbours are also connected to each other. High clustering
-  means the brain has specialised modules.
-
-The ISD is simply:
-
-::
-
-   ISD = efficiency - clustering
-
-A higher ISD indicates a more integrated brain state, which is associated
-with consciousness. Loss of consciousness (e.g. under anaesthesia) reduces
-the ISD.
+Raw connectivity is too large to use directly as the only model input, so the
+repository extracts smaller summaries and keeps a compressed version of the full
+matrix.
 
 
-How ISD Is Computed
--------------------
+Features
+========
 
-1. **Global signal removal**: The strongest shared pattern across all
-   regions is removed from the connectivity matrix. This isolates the
-   more specific, region-to-region connections from the overall background
-   signal.
+The repository uses four feature groups:
 
-2. **Multilevel efficiency**: The connectivity matrix is converted into a
-   series of binary networks at different thresholds (from very lenient to
-   very strict). At each threshold, the average path efficiency is
-   computed. These values are then combined across all thresholds.
-
-3. **Multilevel clustering**: The same thresholding procedure is applied
-   to the cleaned matrix (after global signal removal). At each threshold,
-   the average clustering coefficient is computed and then combined.
-
-4. **ISD**: The difference between the integrated efficiency and the
-   integrated clustering.
+- **ISD**: a summary derived from the linked MATLAB reference. In this repository, ISD is efficiency minus clustering after principal-eigenvector regression.
+- **Graph summaries**: mean degree, degree variability, mean strength, strength variability, and density.
+- **Distribution summaries**: mean, standard deviation, skewness, kurtosis, quartiles, minimum, and maximum.
+- **Connectivity vector**: the upper triangle of the connectivity matrix, containing roughly 99,000 pairwise values.
 
 
-Additional Features
-===================
+Training Matrix
+===============
 
-Beyond ISD, the project extracts two other groups of features from each
-connectivity matrix.
+The default pipeline concatenates:
 
-Graph Metrics
--------------
-
-The connectivity matrix is turned into a network (a graph) by treating
-each brain region as a node and each strong enough connection as a link.
-From this graph, we compute:
-
-- **Mean degree**: On average, how many connections does each region have?
-- **Degree variability**: How much does the number of connections vary
-  across regions? (Some regions may be hubs with many connections.)
-- **Mean strength**: The average total connection weight per region.
-- **Strength variability**: How much connection strength varies across
-  regions.
-- **Density**: What fraction of all possible connections actually exist?
-
-Statistical Summary
--------------------
-
-Basic statistics computed over all pairwise connectivity values:
-
-- Mean, standard deviation, median
-- Skewness (is the distribution of connection strengths symmetric or
-  lopsided?)
-- Kurtosis (does the distribution have heavy tails — are there extreme
-  values?)
-- Percentiles (25th, 75th) and min/max values
-
-These numbers give a quick profile of the overall connectivity
-distribution.
+- 17 raw summary features are assembled for each sample
+- 17 per-subject deviation features are added by comparing a sample to that subject's conscious baseline
+- the high-dimensional connectivity vector is imputed and reduced with PCA
+- the engineered summaries and PCA components are concatenated into the final training matrix
 
 
-Putting It All Together
-=======================
+Interpretation
+==============
 
-For each brain scan, the feature extraction produces a small dictionary:
-
-- 3 ISD-related values (ISD, efficiency, clustering)
-- 5 graph metrics
-- 9 statistical summaries
-- Optionally, the full set of ~99,000 pairwise connectivity values
-
-In practice, the default training pipeline uses 34 engineered features
-(17 raw summary features plus 17 per-subject deviation features) together
-with PCA-reduced connectivity components. The full connectivity vector is
-available but is high-dimensional and therefore reduced before use.
-
-.. code-block:: python
-
-   from src.features import extract_all_features
-
-   features = extract_all_features(connectivity_matrix)
-   print(features['isd'])         # Integration-Segregation Difference
-   print(features['efficiency'])  # Multilevel efficiency
-   print(features['clustering'])  # Multilevel clustering
+A feature such as ISD can be a useful network summary, but this repository's
+predictions come from the combined feature set. A high or low value in one
+summary measure should not be interpreted on its own as direct evidence of
+consciousness.
 
 
-Next Steps
-==========
+Read Next
+=========
 
-- See :doc:`model_architecture` for how these features are used by the default classifier.
-- See :doc:`dataset` for information about the fMRI data.
-- See :doc:`installation` for setup and running instructions.
+- See :doc:`paper_background` for the paper's actual claim.
+- See :doc:`dataset` for how subject-condition blocks are assembled.
+- See :doc:`model_architecture` for how the repository uses these features in XGBoost.

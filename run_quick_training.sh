@@ -16,6 +16,8 @@ PURPLE='\033[0;35m'
 NC='\033[0m'
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$PROJECT_DIR/.venv"
+REQUIREMENTS_FILE="$PROJECT_DIR/requirements-lock.txt"
 
 echo -e "${PURPLE}════════════════════════════════════════════════════════${NC}"
 echo -e "${CYAN} Quick Test Training (5 subjects only)${NC}"
@@ -23,18 +25,18 @@ echo -e "${PURPLE}════════════════════�
 echo ""
 
 # Activate venv (create if missing)
-if [ ! -d "$PROJECT_DIR/venv" ]; then
+if [ ! -d "$VENV_DIR" ]; then
     echo -e "${YELLOW}Creating virtual environment...${NC}"
-    python3 -m venv "$PROJECT_DIR/venv"
+    python3 -m venv "$VENV_DIR"
 fi
-source "$PROJECT_DIR/venv/bin/activate"
+source "$VENV_DIR/bin/activate"
 
 # Check if required packages are installed
 if python -c "import numpy, sklearn, xgboost, pandas, imblearn" 2>/dev/null; then
     echo -e "${GREEN}Dependencies already installed${NC}"
 else
     echo -e "${YELLOW}Installing dependencies into venv...${NC}"
-    python -m pip install --no-cache-dir numpy scipy pandas scikit-learn xgboost imbalanced-learn
+    python -m pip install --no-cache-dir -r "$REQUIREMENTS_FILE"
 fi
 
 # Check dataset

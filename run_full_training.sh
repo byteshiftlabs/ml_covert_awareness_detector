@@ -21,7 +21,8 @@ NC='\033[0m' # No Color
 # Configuration
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATASET_DIR="${PROJECT_DIR}/../datasets/openneuro/ds006623"
-VENV_DIR="${PROJECT_DIR}/venv"
+VENV_DIR="${PROJECT_DIR}/.venv"
+REQUIREMENTS_FILE="${PROJECT_DIR}/requirements-lock.txt"
 
 echo -e "${PURPLE}╔════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${PURPLE}║${NC}   ${CYAN}Covert Consciousness Detection - Full Training Pipeline${NC}   ${PURPLE}║${NC}"
@@ -49,7 +50,7 @@ if python -c "import numpy, sklearn, xgboost, pandas, imblearn" 2>/dev/null; the
     echo -e "${GREEN}✓ All dependencies present${NC}"
 else
     echo -e "${YELLOW}  Missing dependencies - installing into venv...${NC}"
-    python -m pip install --no-cache-dir numpy scipy pandas scikit-learn xgboost imbalanced-learn
+    python -m pip install --no-cache-dir -r "$REQUIREMENTS_FILE"
     
     # Verify installation succeeded
     if python -c "import numpy, sklearn, xgboost, pandas, imblearn" 2>/dev/null; then

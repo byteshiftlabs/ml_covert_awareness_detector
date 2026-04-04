@@ -1,12 +1,12 @@
 """
-Data loading functions - matches the paper's preprocessing exactly.
+Data loading functions for the connectivity workflow used by this repository.
 
-From paper's main.m:
-  1. Load timeseries TSV (446 ROIs)
-  2. Load motion TSV
-  3. Filter timepoints where FD < 0.8
-  4. Compute Pearson correlation → connectivity matrix
-  5. Segment by LOR/ROR timing to create 7 conditions per subject
+Adapted from the linked MATLAB reference workflow:
+    1. Load timeseries TSV (446 ROIs)
+    2. Load motion TSV
+    3. Filter timepoints where FD < 0.8
+    4. Compute Pearson correlation -> connectivity matrix
+    5. Segment by LOR/ROR timing to create 7 conditions per subject
 """
 
 import numpy as np
@@ -32,7 +32,7 @@ def load_timeseries(subject: str, task: str, run: int) -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(f"Missing timeseries: {path}")
 
-    # Load and take first 446 ROIs (paper uses 446 of 456)
+    # Load and take first 446 ROIs (reference workflow uses 446 of 456)
     df = pd.read_csv(path, sep='\t')
     return df.iloc[:, :N_ROIS]
 
@@ -54,7 +54,7 @@ def filter_by_motion(
     motion: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Keep only timepoints with FD < 0.8 (paper's criterion).
+    Keep only timepoints with FD < 0.8 (reference workflow criterion).
 
     Args:
         timeseries: (n_timepoints, 446) ROI time-series
@@ -79,7 +79,7 @@ def compute_connectivity(timeseries: pd.DataFrame) -> np.ndarray:
         return np.full((N_ROIS, N_ROIS), np.nan)
 
     conn = np.corrcoef(timeseries.T)
-    np.fill_diagonal(conn, 0)  # paper sets diagonal to 0
+    np.fill_diagonal(conn, 0)  # reference workflow sets diagonal to 0
     return conn
 
 
@@ -118,7 +118,7 @@ def load_condition_3(subject: str) -> np.ndarray:
     """
     Condition 3: imagery LOR period (during unconsciousness).
 
-    From paper: concatenate run-2 (from lor+375 to end)
+    From the linked MATLAB reference: concatenate run-2 (from lor+375 to end)
     + run-3 (from start to ror-375)
     Skip 375 TRs around transitions to avoid mixed states.
 
@@ -167,7 +167,7 @@ def load_condition_4(subject: str) -> np.ndarray:
     """
     Condition 4: imagery POST-ROR (after regaining consciousness).
 
-    From paper: run-3 from (ror + 1) to end.
+    From the linked MATLAB reference: run-3 from (ror + 1) to end.
     """
     if subject in SPECIAL_SUBJECTS:
         # sub-29 has no post-ROR

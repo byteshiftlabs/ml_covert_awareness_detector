@@ -1,6 +1,5 @@
 """Tests for configuration constants and subject metadata."""
 
-import pytest
 from config import (
     SUBJECTS, N_SUBJECTS, LOR_TIME, ROR_TIME, SPECIAL_SUBJECTS,
     CONDITIONS, CONSCIOUS_CONDITIONS, UNCONSCIOUS_CONDITIONS,

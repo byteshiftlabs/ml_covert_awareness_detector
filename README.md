@@ -4,13 +4,14 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![DOI](https://img.shields.io/badge/Dataset-OpenNeuro%20ds006623-orange.svg)](https://openneuro.org/datasets/ds006623)
 
-Machine learning pipeline for detecting covert consciousness from fMRI functional connectivity during anesthesia.
+Machine learning pipeline for studying covert-awareness-related fMRI functional
+connectivity during anesthesia.
 
 > **Disclosure:** This software was developed with AI assistance under human supervision. It is actively being improved, validated, and documented.
 
 ## Overview
 
-Detects hidden awareness in behaviorally unresponsive patients using the [Michigan Human Anesthesia fMRI Dataset](https://openneuro.org/datasets/ds006623) (OpenNeuro ds006623). Implements machine learning classifiers that distinguish consciousness states during propofol sedation based on functional connectivity patterns across 446 brain regions.
+Research-oriented Python pipeline built on the [Michigan Human Anesthesia fMRI Dataset](https://openneuro.org/datasets/ds006623) (OpenNeuro ds006623). The repository does not reproduce the 2018 paper's primary task-fMRI analysis; instead, it trains a separate connectivity-based classifier on the open derivatives and the linked MATLAB reference workflow.
 
 ## Quick Start
 
@@ -18,14 +19,17 @@ Detects hidden awareness in behaviorally unresponsive patients using the [Michig
 # Clone and set up
 git clone https://github.com/byteshiftlabs/covert-awareness-detector.git
 cd covert-awareness-detector
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-lock.txt
 
 # Run the full training pipeline (downloads data and trains the default model)
 ./run_full_training.sh
 ```
 
 ## How It Works
+
+The repository workflow below describes the current Python classifier, not the
+original paper's activation-based decision procedure.
 
 The pipeline processes fMRI brain scans through several stages to classify consciousness states:
 

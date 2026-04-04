@@ -1,11 +1,13 @@
 """
 Feature extraction from connectivity matrices.
 
-Implements the paper's ISD (Integration-Segregation Difference) calculation:
-  1. Regress out principal eigenvector to remove global signal
-  2. Compute multilevel efficiency (integration)
-  3. Compute multilevel clustering (segregation)
-  4. ISD = efficiency - clustering
+Implements the ISD (Integration-Segregation Difference) calculation adapted
+from the linked MATLAB reference repository for the open anesthesia fMRI
+resource:
+    1. Regress out principal eigenvector to remove global signal
+    2. Compute multilevel efficiency (integration)
+    3. Compute multilevel clustering (segregation)
+    4. ISD = efficiency - clustering
 """
 
 import numpy as np
@@ -20,7 +22,7 @@ def regress_principal_eigenvector(connectivity_matrix: np.ndarray) -> np.ndarray
     """
     Remove global signal by regressing out principal eigenvector.
 
-    From paper's ISD_calculation.m:
+    From the linked MATLAB reference's ISD_calculation.m:
         [V, D] = eig(FC);
         lambda1 = max(diag(D));
         u1 = V(:, idx_of_lambda1);
@@ -48,7 +50,7 @@ def regress_principal_eigenvector(connectivity_matrix: np.ndarray) -> np.ndarray
     # Regress out
     connectivity_matrix_regressed = connectivity_matrix_clean - lambda1 * np.outer(u1, u1)
 
-    # Clip to non-negative (paper does max(0, ...))
+    # Clip to non-negative (reference implementation does max(0, ...))
     connectivity_matrix_regressed = np.maximum(0, connectivity_matrix_regressed)
 
     # Put back into original shape
@@ -62,7 +64,7 @@ def multilevel_efficiency(connectivity_matrix: np.ndarray, thresholds: np.ndarra
     """
     Compute multilevel efficiency (integration measure).
 
-    From paper's multilevel_efficiency.m:
+    From the linked MATLAB reference's multilevel_efficiency.m:
         For each threshold T:
             Binary graph = (FC > T)
             Compute shortest path distances
@@ -112,7 +114,7 @@ def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarra
     """
     Compute multilevel clustering coefficient (segregation measure).
 
-    From paper's multilevel_clustering.m:
+    From the linked MATLAB reference's multilevel_clustering.m:
         For each threshold T:
             Binary graph = (FC_regressed > T)
             Clustering = clustering_coef_bu(graph)
@@ -164,11 +166,11 @@ def compute_isd(
     """
     Compute Integration-Segregation Difference (ISD).
 
-    Paper's key metric for consciousness:
+    Repository summary metric implemented from the linked MATLAB reference:
         ISD = Efficiency - Clustering
 
-    Higher ISD indicates more integrated (conscious) brain states.
-    LOR states show significantly lower ISD (p < 0.05).
+    Higher values indicate relatively more integration than clustering in this
+    implementation.
 
     Args:
         connectivity_matrix: (446, 446) connectivity matrix
@@ -229,7 +231,7 @@ def extract_all_features(connectivity_matrix: np.ndarray) -> dict:
     connectivity_matrix_clean[np.isnan(connectivity_matrix_clean)] = 0
     connectivity_matrix_clean[np.isinf(connectivity_matrix_clean)] = 0
 
-    # ISD metrics (paper's key features)
+    # ISD-derived summary metrics
     isd, efficiency, clustering = compute_isd(connectivity_matrix_clean)
 
     # Graph metrics
