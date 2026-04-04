@@ -2,73 +2,31 @@
 Installation
 ============
 
-This guide will help you install the Covert Awareness Detector and all its dependencies. Follow the steps carefully to ensure a smooth setup.
-
-.. contents:: Table of Contents
-   :local:
-   :depth: 2
+This page covers the minimal setup needed to run the repository.
 
 
-Tested Environment
-==================
+Environment
+===========
+The installation steps and default training pipeline have been tested on an
+Ubuntu 24.04 WSL image.
 
-This software has been tested on **Ubuntu 22.04 LTS on WSL (Windows Subsystem for Linux)**.
+If you are on Windows, install WSL first:
 
+https://docs.microsoft.com/en-us/windows/wsl/install
 
-Installation Steps
-==================
-
-Step 1: Install WSL Ubuntu
----------------------------
-
-1. Install WSL2: https://docs.microsoft.com/en-us/windows/wsl/install
-2. Install Ubuntu 22.04 LTS from Microsoft Store
-3. Open Ubuntu terminal
-
-
-Step 2: Install Python
-----------------------
+The commands below assume a Linux-like shell environment with Python 3,
+``venv``, and ``pip`` available.
 
 .. code-block:: bash
 
    sudo apt update
-   sudo apt install python3.10 python3.10-venv python3.10-dev python3-pip
-   python3.10 --version
-
-
-Step 3: Clone the Repository
------------------------------
-
-.. code-block:: bash
-
-   sudo apt install git
+   sudo apt install git python3 python3-venv python3-pip
    git clone https://github.com/byteshiftlabs/covert-awareness-detector.git
    cd covert-awareness-detector
-
-
-Step 4: Create Virtual Environment
------------------------------------
-
-.. code-block:: bash
-
-   python3.10 -m venv venv
-   source venv/bin/activate
-
-
-Step 5: Upgrade pip
--------------------
-
-.. code-block:: bash
-
+   python3 -m venv .venv
+   source .venv/bin/activate
    pip install --upgrade pip setuptools wheel
-
-
-Step 6: Install Dependencies
------------------------------
-
-.. code-block:: bash
-
-   pip install -r requirements.txt
+   pip install -r requirements-lock.txt
 
 
 
@@ -80,10 +38,10 @@ If you encounter issues:
 .. code-block:: bash
 
    # Make sure virtual environment is activated
-   which python  # Should point to venv/bin/python
+   which python  # Should point to .venv/bin/python
    
    # Reinstall dependencies if needed
-   pip install --force-reinstall -r requirements.txt
+   pip install --force-reinstall -r requirements-lock.txt
 
 
 
@@ -92,4 +50,8 @@ If you encounter issues:
 Next Steps
 ==========
 
-See :doc:`dataset` for dataset details and run ``python src/train.py`` (or ``./run_full_training.sh``) to execute the default XGBoost pipeline.
+Run ``python src/train.py`` or ``./run_full_training.sh`` to execute the
+default XGBoost pipeline.
+
+If you choose the minimum-spec install from ``requirements.txt`` instead of the
+lockfile, run ``pip install .[docs]`` before ``make html``.
