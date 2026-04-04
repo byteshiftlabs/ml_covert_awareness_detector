@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'Covert Awareness Detector'
 copyright = '2026, byteshiftlabs'
 author = 'byteshiftlabs'
-release = '0.1.0'
+release = '0.1.1'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
