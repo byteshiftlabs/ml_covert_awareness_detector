@@ -107,106 +107,111 @@ def optimize_threshold(y_true, y_proba):
     return best_threshold, best_balanced_accuracy
 
 
-print("="*70)
-print("OVERFITTING VALIDATION")
-print("="*70)
+def main():
+    print("="*70)
+    print("OVERFITTING VALIDATION")
+    print("="*70)
 
-# Prepare data
-print("\nLoading data...")
-X_combined, y, subject_ids, pca, imputer = prepare_data()
-print(f"Feature matrix: {X_combined.shape}\n")
+    # Prepare data
+    print("\nLoading data...")
+    X_combined, y, subject_ids, pca, imputer = prepare_data()
+    print(f"Feature matrix: {X_combined.shape}\n")
 
-# CHECK 1: Holdout test (5 subjects held out)
-print("CHECK 1: HOLDOUT TEST")
-print("-" * 70)
-unique_subjects = np.unique(subject_ids)
-np.random.seed(42)
-test_subjects = np.random.choice(unique_subjects, size=5, replace=False)
+    # CHECK 1: Holdout test (5 subjects held out)
+    print("CHECK 1: HOLDOUT TEST")
+    print("-" * 70)
+    unique_subjects = np.unique(subject_ids)
+    np.random.seed(42)
+    test_subjects = np.random.choice(unique_subjects, size=5, replace=False)
 
-test_mask = np.isin(subject_ids, test_subjects)
-X_train, y_train = X_combined[~test_mask], y[~test_mask]
-X_test, y_test = X_combined[test_mask], y[test_mask]
+    test_mask = np.isin(subject_ids, test_subjects)
+    X_train, y_train = X_combined[~test_mask], y[~test_mask]
+    X_test, y_test = X_combined[test_mask], y[test_mask]
 
-clf, y_proba, scaler = train_model(X_train, y_train, X_test, y_test)
-best_threshold, best_balanced_accuracy = optimize_threshold(y_test, y_proba)
+    clf, y_proba, scaler = train_model(X_train, y_train, X_test, y_test)
+    best_threshold, best_balanced_accuracy = optimize_threshold(y_test, y_proba)
 
-y_pred_optimal = (y_proba >= best_threshold).astype(int)
-confusion_mat = confusion_matrix(y_test, y_pred_optimal)
-recall_unconscious = recall_score(y_test, y_pred_optimal, pos_label=0, zero_division=0)
-recall_conscious = recall_score(y_test, y_pred_optimal, pos_label=1, zero_division=0)
+    y_pred_optimal = (y_proba >= best_threshold).astype(int)
+    confusion_mat = confusion_matrix(y_test, y_pred_optimal)
+    recall_unconscious = recall_score(y_test, y_pred_optimal, pos_label=0, zero_division=0)
+    recall_conscious = recall_score(y_test, y_pred_optimal, pos_label=1, zero_division=0)
 
-print(f"Test subjects: {test_subjects}")
-print(f"Balanced Accuracy: {best_balanced_accuracy:.3f} (threshold {best_threshold:.2f})")
-print(f"Recall - Unconscious: {recall_unconscious:.3f}, Conscious: {recall_conscious:.3f}")
-print(f"Confusion: [[{confusion_mat[0,0]}, {confusion_mat[0,1]}], [{confusion_mat[1,0]}, {confusion_mat[1,1]}]]")
+    print(f"Test subjects: {test_subjects}")
+    print(f"Balanced Accuracy: {best_balanced_accuracy:.3f} (threshold {best_threshold:.2f})")
+    print(f"Recall - Unconscious: {recall_unconscious:.3f}, Conscious: {recall_conscious:.3f}")
+    print(f"Confusion: [[{confusion_mat[0,0]}, {confusion_mat[0,1]}], [{confusion_mat[1,0]}, {confusion_mat[1,1]}]]")
 
-check1_pass = best_balanced_accuracy > 0.65
-print(f"{'✓ PASS' if check1_pass else '⚠ FAIL'}: {'Good' if check1_pass else 'Low'} generalization\n")
+    check1_pass = best_balanced_accuracy > 0.65
+    print(f"{'✓ PASS' if check1_pass else '⚠ FAIL'}: {'Good' if check1_pass else 'Low'} generalization\n")
 
-# CHECK 2: Feature importance
-print("CHECK 2: FEATURE IMPORTANCE")
-print("-" * 70)
-importances = clf.feature_importances_
-engineered_importance = importances[:68].sum()  # Engineered features (34 basic + 34 deviations)
-pca_importance = importances[68:].sum()  # PCA features
+    # CHECK 2: Feature importance
+    print("CHECK 2: FEATURE IMPORTANCE")
+    print("-" * 70)
+    importances = clf.feature_importances_
+    engineered_importance = importances[:68].sum()  # Engineered features (34 basic + 34 deviations)
+    pca_importance = importances[68:].sum()  # PCA features
 
-print(f"Engineered features: {engineered_importance:.3f} ({engineered_importance/(engineered_importance+pca_importance)*100:.0f}%)")
-print(f"PCA connectivity:    {pca_importance:.3f} ({pca_importance/(engineered_importance+pca_importance)*100:.0f}%)")
+    print(f"Engineered features: {engineered_importance:.3f} ({engineered_importance/(engineered_importance+pca_importance)*100:.0f}%)")
+    print(f"PCA connectivity:    {pca_importance:.3f} ({pca_importance/(engineered_importance+pca_importance)*100:.0f}%)")
 
-check2_pass = pca_importance > 0.25
-print(f"{'✓ PASS' if check2_pass else '⚠ FAIL'}: PCA features {'are' if check2_pass else 'not'} meaningful\n")
+    check2_pass = pca_importance > 0.25
+    print(f"{'✓ PASS' if check2_pass else '⚠ FAIL'}: PCA features {'are' if check2_pass else 'not'} meaningful\n")
 
-# CHECK 3: CV stability (10 subjects)
-print("CHECK 3: CV STABILITY")
-print("-" * 70)
-cv_scores = []
-for test_subject in unique_subjects[:10]:
-    test_mask = subject_ids == test_subject
-    X_train_cv, y_train_cv = X_combined[~test_mask], y[~test_mask]
-    X_test_cv, y_test_cv = X_combined[test_mask], y[test_mask]
-    
-    _, y_proba_cv, _ = train_model(X_train_cv, y_train_cv, X_test_cv, y_test_cv)
-    y_pred_cv = (y_proba_cv >= best_threshold).astype(int)
-    cv_scores.append(balanced_accuracy_score(y_test_cv, y_pred_cv))
+    # CHECK 3: CV stability (10 subjects)
+    print("CHECK 3: CV STABILITY")
+    print("-" * 70)
+    cv_scores = []
+    for test_subject in unique_subjects[:10]:
+        test_mask = subject_ids == test_subject
+        X_train_cv, y_train_cv = X_combined[~test_mask], y[~test_mask]
+        X_test_cv, y_test_cv = X_combined[test_mask], y[test_mask]
+        
+        _, y_proba_cv, _ = train_model(X_train_cv, y_train_cv, X_test_cv, y_test_cv)
+        y_pred_cv = (y_proba_cv >= best_threshold).astype(int)
+        cv_scores.append(balanced_accuracy_score(y_test_cv, y_pred_cv))
 
-mean_cv, std_cv = np.mean(cv_scores), np.std(cv_scores)
-coefficient_of_variation = std_cv / mean_cv
+    mean_cv, std_cv = np.mean(cv_scores), np.std(cv_scores)
+    coefficient_of_variation = std_cv / mean_cv
 
-print(f"Balanced accuracy: {mean_cv:.3f} ± {std_cv:.3f}")
-print(f"Coefficient of variation: {coefficient_of_variation:.3f}")
+    print(f"Balanced accuracy: {mean_cv:.3f} ± {std_cv:.3f}")
+    print(f"Coefficient of variation: {coefficient_of_variation:.3f}")
 
-check3_pass = coefficient_of_variation < 0.30
-print(f"{'✓ PASS' if check3_pass else '⚠ FAIL'}: {'Low' if check3_pass else 'High'} variance across folds\n")
+    check3_pass = coefficient_of_variation < 0.30
+    print(f"{'✓ PASS' if check3_pass else '⚠ FAIL'}: {'Low' if check3_pass else 'High'} variance across folds\n")
 
-# CHECK 4: Permutation test
-print("CHECK 4: PERMUTATION TEST")
-print("-" * 70)
-y_permuted = np.random.permutation(y_train)
-clf_permuted, y_proba_permuted, _ = train_model(X_train, y_permuted, X_test, y_test)
-y_pred_permuted = (y_proba_permuted >= best_threshold).astype(int)
-permuted_balanced_accuracy = balanced_accuracy_score(y_test, y_pred_permuted)
+    # CHECK 4: Permutation test
+    print("CHECK 4: PERMUTATION TEST")
+    print("-" * 70)
+    y_permuted = np.random.permutation(y_train)
+    clf_permuted, y_proba_permuted, _ = train_model(X_train, y_permuted, X_test, y_test)
+    y_pred_permuted = (y_proba_permuted >= best_threshold).astype(int)
+    permuted_balanced_accuracy = balanced_accuracy_score(y_test, y_pred_permuted)
 
-print(f"Real labels:     {best_balanced_accuracy:.3f}")
-print(f"Permuted labels: {permuted_balanced_accuracy:.3f}")
-print(f"Difference:      {best_balanced_accuracy - permuted_balanced_accuracy:.3f}")
+    print(f"Real labels:     {best_balanced_accuracy:.3f}")
+    print(f"Permuted labels: {permuted_balanced_accuracy:.3f}")
+    print(f"Difference:      {best_balanced_accuracy - permuted_balanced_accuracy:.3f}")
 
-check4_pass = best_balanced_accuracy > permuted_balanced_accuracy + 0.15
-print(f"{'✓ PASS' if check4_pass else '⚠ FAIL'}: Real model {'significantly' if check4_pass else 'barely'} outperforms chance\n")
+    check4_pass = best_balanced_accuracy > permuted_balanced_accuracy + 0.15
+    print(f"{'✓ PASS' if check4_pass else '⚠ FAIL'}: Real model {'significantly' if check4_pass else 'barely'} outperforms chance\n")
 
-# Summary
-print("="*70)
-print("VALIDATION SUMMARY")
-print("="*70)
-checks_passed = sum([check1_pass, check2_pass, check3_pass, check4_pass])
-print(f"Checks passed: {checks_passed}/4")
-print(f"✓ Holdout test:       {'PASS' if check1_pass else 'FAIL'}")
-print(f"✓ Feature importance: {'PASS' if check2_pass else 'FAIL'}")
-print(f"✓ CV stability:       {'PASS' if check3_pass else 'FAIL'}")
-print(f"✓ Permutation test:   {'PASS' if check4_pass else 'FAIL'}")
+    # Summary
+    print("="*70)
+    print("VALIDATION SUMMARY")
+    print("="*70)
+    checks_passed = sum([check1_pass, check2_pass, check3_pass, check4_pass])
+    print(f"Checks passed: {checks_passed}/4")
+    print(f"✓ Holdout test:       {'PASS' if check1_pass else 'FAIL'}")
+    print(f"✓ Feature importance: {'PASS' if check2_pass else 'FAIL'}")
+    print(f"✓ CV stability:       {'PASS' if check3_pass else 'FAIL'}")
+    print(f"✓ Permutation test:   {'PASS' if check4_pass else 'FAIL'}")
 
-if checks_passed >= 3:
-    print(f"\n✓✓ MODEL VALIDATED - Bal Acc: {best_balanced_accuracy:.1%}, Stable: {mean_cv:.3f}±{std_cv:.3f}")
-else:
-    print("\n⚠ VALIDATION CONCERNS - Investigate further")
-print("="*70)
+    if checks_passed >= 3:
+        print(f"\n✓✓ MODEL VALIDATED - Bal Acc: {best_balanced_accuracy:.1%}, Stable: {mean_cv:.3f}±{std_cv:.3f}")
+    else:
+        print("\n⚠ VALIDATION CONCERNS - Investigate further")
+    print("="*70)
+
+
+if __name__ == '__main__':
+    main()
 
