@@ -1,9 +1,10 @@
 Covert Awareness Detector Documentation
-========================================
+=======================================
 
-Welcome to the Covert Awareness Detector documentation. This project implements 
-deep learning models to detect hidden consciousness in patients who appear 
-behaviorally unresponsive but show neural signatures of awareness.
+Welcome to the Covert Awareness Detector documentation. This project implements
+an XGBoost-based machine learning pipeline to detect hidden consciousness in
+patients who appear behaviorally unresponsive but still show neural signatures
+of awareness.
 
 **Building on Research by Huang et al. (University of Michigan)**
 
@@ -23,24 +24,8 @@ consciousness signatures in fMRI data during propofol anesthesia.
    :maxdepth: 2
    :caption: Core Documentation:
 
-   data_pipeline
    feature_extraction
    model_architecture
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference:
-
-   api/data_loader
-   api/features
-   api/models
-   api/training
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Additional Resources
-
-   
 
 Indices and tables
 ==================
