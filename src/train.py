@@ -173,7 +173,7 @@ def main(argv=None):
     print(f"F1 Score:             {best_metrics['f1']:.3f}")
     print(f"ROC-AUC:              {best_metrics['roc_auc']:.3f}")
 
-    cm = best_metrics['confusion_matrix']
+    cm = np.asarray(best_metrics['confusion_matrix'], dtype=int)
     print("\nConfusion Matrix:")
     print("                    Predicted")
     print("              Unconscious  Conscious")
