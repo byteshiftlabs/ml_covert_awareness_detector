@@ -5,10 +5,6 @@ Dataset
 This page summarizes the data used by the repository and the labels consumed by
 the model.
 
-
-Dataset
-=======
-
 :Dataset used by this repository: Michigan Human Anesthesia fMRI Dataset
 :OpenNeuro ID: ds006623
 :DOI: `10.18112/openneuro.ds006623.v1.0.0 <https://doi.org/10.18112/openneuro.ds006623.v1.0.0>`_
@@ -148,7 +144,7 @@ References
 
 - Huang et al. (2018). *Scientific Reports*. `DOI: 10.1038/s41598-018-31436-z <https://doi.org/10.1038/s41598-018-31436-z>`_
 
-**Linked MATLAB reference used for connectivity workflow provenance:**
+**Linked MATLAB reference for this workflow:**
 
 - Jang et al. *An Open fMRI Resource for Studying Human Brain Function and Covert Consciousness Under Anesthesia* analysis code. `GitHub repository <https://github.com/janghw4/Anesthesia-fMRI-functional-connectivity-and-balance-calculation>`_
 

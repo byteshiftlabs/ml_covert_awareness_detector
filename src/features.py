@@ -1,13 +1,10 @@
 """
 Feature extraction from connectivity matrices.
 
-Implements the ISD (Integration-Segregation Difference) calculation adapted
-from the linked MATLAB reference repository for the open anesthesia fMRI
-resource:
-    1. Regress out principal eigenvector to remove global signal
-    2. Compute multilevel efficiency (integration)
-    3. Compute multilevel clustering (segregation)
-    4. ISD = efficiency - clustering
+Implements a simplified ISD-style summary metric based on the linked MATLAB
+reference repository for the open anesthesia fMRI resource. The Python code
+keeps the same main stages but does not try to reproduce the exact same
+numbers as the MATLAB/BCT implementation.
 """
 
 import numpy as np
@@ -62,7 +59,7 @@ def regress_principal_eigenvector(connectivity_matrix: np.ndarray) -> np.ndarray
 
 def multilevel_efficiency(connectivity_matrix: np.ndarray, thresholds: np.ndarray) -> float:
     """
-    Compute multilevel efficiency (integration measure).
+    Compute the repository's approximate multilevel efficiency measure.
 
     From the linked MATLAB reference's multilevel_efficiency.m:
         For each threshold T:
@@ -70,6 +67,10 @@ def multilevel_efficiency(connectivity_matrix: np.ndarray, thresholds: np.ndarra
             Compute shortest path distances
             Efficiency = mean of inverse distances
         Integrate over thresholds using trapezoidal rule
+
+    This repository keeps the threshold sweep but uses inverse connectivity
+    within each thresholded graph instead of running a full shortest-path
+    algorithm.
 
     Args:
         connectivity_matrix: (n_rois, n_rois) connectivity matrix
@@ -112,13 +113,16 @@ def multilevel_efficiency(connectivity_matrix: np.ndarray, thresholds: np.ndarra
 
 def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarray) -> float:
     """
-    Compute multilevel clustering coefficient (segregation measure).
+    Compute the repository's approximate multilevel clustering coefficient.
 
     From the linked MATLAB reference's multilevel_clustering.m:
         For each threshold T:
             Binary graph = (FC_regressed > T)
             Clustering = clustering_coef_bu(graph)
         Integrate over thresholds
+
+    This repository uses a simple triangle-count binary coefficient rather than
+    Brain Connectivity Toolbox's ``clustering_coef_bu`` implementation.
 
     Args:
         connectivity_matrix: (n_rois, n_rois) connectivity matrix (should be regressed)
@@ -166,8 +170,8 @@ def compute_isd(
     """
     Compute Integration-Segregation Difference (ISD).
 
-    Repository summary metric implemented from the linked MATLAB reference:
-        ISD = Efficiency - Clustering
+    Repository summary metric based on the linked MATLAB reference:
+        ISD = approximate efficiency - approximate clustering
 
     Higher values indicate relatively more integration than clustering in this
     implementation.

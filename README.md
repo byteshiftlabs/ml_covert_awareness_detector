@@ -1,7 +1,7 @@
 # Covert Awareness Detector
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![DOI](https://img.shields.io/badge/Dataset-OpenNeuro%20ds006623-orange.svg)](https://openneuro.org/datasets/ds006623)
 
 Machine learning pipeline for studying covert-awareness-related fMRI functional
@@ -11,9 +11,15 @@ connectivity during anesthesia.
 
 ## Overview
 
-Research-oriented Python pipeline built on the [Michigan Human Anesthesia fMRI Dataset](https://openneuro.org/datasets/ds006623) (OpenNeuro ds006623). The repository does not reproduce the 2018 paper's primary task-fMRI analysis; instead, it trains a separate connectivity-based classifier on the open derivatives and the linked MATLAB reference workflow.
+This is a Python pipeline for research use, built on the [Michigan Human Anesthesia fMRI Dataset](https://openneuro.org/datasets/ds006623) (OpenNeuro ds006623). The repository does not reproduce the 2018 paper's main task-fMRI analysis. Instead, it trains a separate connectivity-based classifier on the open derivatives and uses a simpler ISD calculation based on the linked MATLAB code.
+
+The current ISD feature implementation is based on the MATLAB code, but it is not an exact copy. It still uses efficiency minus clustering, but the graph calculations are simpler in Python, so the numbers will not exactly match the MATLAB/BCT output.
 
 ## Quick Start
+
+This release requires Python 3.11+. It was verified with Python 3.12.3 on Ubuntu 24.04 WSL.
+
+If `python3 --version` reports an older interpreter, install Python 3.11+ before creating `.venv`.
 
 ```bash
 # Clone and set up
@@ -28,8 +34,8 @@ pip install -r requirements-lock.txt
 
 ## How It Works
 
-The repository workflow below describes the current Python classifier, not the
-original paper's activation-based decision procedure.
+The steps below describe the current Python classifier, not the original
+paper's activation-based method.
 
 The pipeline processes fMRI brain scans through several stages to classify consciousness states:
 
@@ -69,7 +75,7 @@ src/
   config.py               # Dataset paths, subject list, scan parameters
   data_loader.py          # Load timeseries, motion filtering, connectivity matrices
   download_dataset.py     # OpenNeuro dataset downloader
-  features.py             # ISD, graph metrics, connectivity feature extraction
+  features.py             # Approximate ISD, graph metrics, connectivity feature extraction
   train.py                # Full training pipeline: XGBoost + PCA + SMOTE
   validate_model.py       # Overfitting checks and permutation tests
 
@@ -78,8 +84,15 @@ docs/                     # Sphinx documentation
 
 run_full_training.sh      # Automated training pipeline (START HERE)
 pyproject.toml            # Project metadata and dependencies
-requirements.txt          # Core dependencies (pip)
+requirements.txt          # Minimum-spec dependencies
+requirements-lock.txt     # Release-verified lockfile
 ```
+
+## Requirements
+
+- Python 3.11+
+- Bash-compatible shell environment for the helper scripts
+- Roughly 1.8 GB of free disk space for the OpenNeuro derivatives download
 
 ## Model
 
@@ -114,4 +127,4 @@ Dataset: CC0 (Public Domain).
 
 ---
 
-**Documentation**: [docs/](docs/) · **Updated**: February 2026
+**Documentation**: [docs/](docs/)

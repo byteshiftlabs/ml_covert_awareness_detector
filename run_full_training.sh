@@ -20,9 +20,50 @@ NC='\033[0m' # No Color
 
 # Configuration
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DATASET_DIR="${PROJECT_DIR}/../datasets/openneuro/ds006623"
+DATASET_DIR="${DATASET_DIR:-${PROJECT_DIR}/../datasets/openneuro/ds006623}"
 VENV_DIR="${PROJECT_DIR}/.venv"
 REQUIREMENTS_FILE="${PROJECT_DIR}/requirements-lock.txt"
+
+require_supported_python() {
+    local interpreter="$1"
+    "$interpreter" - <<'PY'
+import sys
+
+required = (3, 11)
+current = sys.version_info[:2]
+if current < required:
+    raise SystemExit(
+        f"Python {required[0]}.{required[1]}+ is required for this release; "
+        f"found {current[0]}.{current[1]}"
+    )
+PY
+}
+
+count_supported_subjects() {
+    local dataset_dir="$1"
+    python - "$dataset_dir" <<'PY'
+import sys
+from pathlib import Path
+
+sys.path.insert(0, "src")
+from config import SUBJECTS
+
+dataset_dir = Path(sys.argv[1]) / "derivatives" / "xcp_d_without_GSR_bandpass_output"
+present_subjects = {path.name for path in dataset_dir.glob("sub-*") if path.is_dir()}
+print(sum(1 for subject in SUBJECTS if subject in present_subjects))
+PY
+}
+
+required_subject_count() {
+    python - <<'PY'
+import sys
+
+sys.path.insert(0, "src")
+from config import SUBJECTS
+
+print(len(SUBJECTS))
+PY
+}
 
 echo -e "${PURPLE}╔════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${PURPLE}║${NC}   ${CYAN}Covert Consciousness Detection - Full Training Pipeline${NC}   ${PURPLE}║${NC}"
@@ -33,6 +74,14 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${CYAN}[1/3] Checking Virtual Environment${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+echo -e "${YELLOW}  Checking Python version...${NC}"
+if require_supported_python python3; then
+    echo -e "${GREEN}✓ Python 3.11+ detected${NC}"
+else
+    echo -e "${RED}✗ Python 3.11+ is required for this release${NC}"
+    exit 1
+fi
 
 if [ ! -d "$VENV_DIR" ]; then
     echo -e "${RED}✗ Virtual environment not found!${NC}"
@@ -76,10 +125,10 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 
 # Check if dataset exists
 if [ -d "$DATASET_DIR/derivatives/xcp_d_without_GSR_bandpass_output" ]; then
-    # Count number of subject directories
-    SUBJECT_COUNT=$(ls -d "$DATASET_DIR/derivatives/xcp_d_without_GSR_bandpass_output"/sub-* 2>/dev/null | wc -l)
+    SUBJECT_COUNT=$(count_supported_subjects "$DATASET_DIR")
+    REQUIRED_SUBJECT_COUNT=$(required_subject_count)
     
-    if [ "$SUBJECT_COUNT" -ge 25 ]; then
+    if [ "$SUBJECT_COUNT" -ge "$REQUIRED_SUBJECT_COUNT" ]; then
         echo -e "${GREEN}✓ Dataset already present${NC}"
         echo -e "  Location: ${DATASET_DIR}"
         echo -e "  Subjects: ${SUBJECT_COUNT}"

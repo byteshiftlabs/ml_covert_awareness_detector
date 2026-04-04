@@ -30,10 +30,27 @@ Features
 
 The repository uses four feature groups:
 
-- **ISD**: a summary derived from the linked MATLAB reference. In this repository, ISD is efficiency minus clustering after principal-eigenvector regression.
+- **ISD**: a simplified version of the summary used in the linked MATLAB code. In this repository, ISD is efficiency minus clustering after principal-eigenvector regression, but the graph calculations are simpler and do not exactly match the MATLAB/BCT output.
 - **Graph summaries**: mean degree, degree variability, mean strength, strength variability, and density.
 - **Distribution summaries**: mean, standard deviation, skewness, kurtosis, quartiles, minimum, and maximum.
 - **Connectivity vector**: the upper triangle of the connectivity matrix, containing roughly 99,000 pairwise values.
+
+
+How This Differs From The MATLAB Code
+=====================================
+
+The linked MATLAB repository remains the best source for the original
+connectivity workflow. This Python implementation follows the same general ISD
+idea, but the numbers are not expected to exactly match the MATLAB output.
+
+- ``multilevel_efficiency()`` thresholds the graph and uses inverse
+	connectivity within each thresholded graph instead of running a full
+	shortest-path calculation.
+- ``multilevel_clustering()`` uses a simple triangle-count coefficient instead
+	of Brain Connectivity Toolbox's ``clustering_coef_bu``.
+
+Use ISD here as one summary feature for this classifier, not as an exact
+replacement for the MATLAB output.
 
 
 Training Matrix
