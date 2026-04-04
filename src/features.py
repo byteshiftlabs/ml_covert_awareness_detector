@@ -12,6 +12,9 @@ import numpy as np
 from typing import Tuple
 from scipy.stats import skew, kurtosis
 
+# np.trapz was removed in NumPy 2.0; use np.trapezoid when available
+_trapz = getattr(np, 'trapezoid', getattr(np, 'trapz', None))
+
 
 def regress_principal_eigenvector(connectivity_matrix: np.ndarray) -> np.ndarray:
     """
@@ -102,7 +105,7 @@ def multilevel_efficiency(connectivity_matrix: np.ndarray, thresholds: np.ndarra
         ml_efficiency.append(np.nanmean(eff))
 
     # Integrate using trapezoidal rule
-    return np.trapz(ml_efficiency, thresholds)
+    return _trapz(ml_efficiency, thresholds)
 
 
 def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarray) -> float:
@@ -151,7 +154,7 @@ def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarra
 
         ml_clustering.append(np.nanmean(clust))
 
-    return np.trapz(ml_clustering, thresholds)
+    return _trapz(ml_clustering, thresholds)
 
 
 def compute_isd(

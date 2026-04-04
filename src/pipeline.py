@@ -1,0 +1,179 @@
+"""Shared helpers for training and validation workflows."""
+
+from __future__ import annotations
+
+import json
+import time
+from pathlib import Path
+from typing import Callable, Iterable, Optional
+
+import numpy as np
+import xgboost as xgb
+from imblearn.over_sampling import SMOTE
+from sklearn.decomposition import PCA
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+from sklearn.preprocessing import StandardScaler
+
+from config import CONSCIOUS_CONDITIONS, RANDOM_STATE, RESULTS_DIR, SUBJECTS
+from data_loader import load_subject_all_conditions
+from features import extract_all_features
+
+
+def select_subjects(subjects: Optional[Iterable[str]] = None, max_subjects: Optional[int] = None) -> list[str]:
+    """Return the ordered subject list, optionally truncated for smoke runs."""
+    selected_subjects = list(SUBJECTS if subjects is None else subjects)
+    if max_subjects is not None:
+        selected_subjects = selected_subjects[:max_subjects]
+    return selected_subjects
+
+
+def build_feature_dataset(
+    subjects: Optional[Iterable[str]] = None,
+    max_subjects: Optional[int] = None,
+    on_subject_loaded: Optional[Callable[[int, int, str], None]] = None,
+) -> dict:
+    """Load matrices, extract features, and assemble the training design matrix."""
+    selected_subjects = select_subjects(subjects=subjects, max_subjects=max_subjects)
+    all_features = []
+    all_connectivity_matrices = []
+
+    for idx, subject in enumerate(selected_subjects):
+        if on_subject_loaded is not None:
+            on_subject_loaded(idx, len(selected_subjects), subject)
+
+        subject_connectivity_matrices = load_subject_all_conditions(subject)
+        for condition_idx in range(7):
+            connectivity_matrix = subject_connectivity_matrices[condition_idx]
+            features = extract_all_features(connectivity_matrix)
+
+            all_connectivity_matrices.append(features["connectivity"])
+            features["subject"] = subject
+            features["condition"] = condition_idx
+            features["label"] = 1 if condition_idx in CONSCIOUS_CONDITIONS else 0
+            all_features.append(features)
+
+    feature_names_basic = [
+        key for key in all_features[0].keys()
+        if key not in ["subject", "condition", "label", "connectivity"]
+    ]
+    x_basic = np.array([[feature[name] for name in feature_names_basic] for feature in all_features])
+    subject_ids = np.array([feature["subject"] for feature in all_features])
+    labels = np.array([feature["label"] for feature in all_features])
+
+    x_deviations = np.zeros_like(x_basic)
+    for subject in np.unique(subject_ids):
+        subject_mask = subject_ids == subject
+        subject_data = x_basic[subject_mask]
+        conscious_mask = labels[subject_mask] == 1
+        baseline = subject_data[conscious_mask].mean(axis=0) if conscious_mask.sum() > 0 else subject_data.mean(axis=0)
+        x_deviations[subject_mask] = subject_data - baseline
+
+    x_engineered = np.hstack([x_basic, x_deviations])
+
+    imputer = SimpleImputer(strategy="median")
+    x_connectivity = np.array(all_connectivity_matrices)
+    x_connectivity_clean = imputer.fit_transform(x_connectivity)
+    n_components = min(50, x_connectivity_clean.shape[0] - 1)
+    pca = PCA(n_components=n_components, random_state=RANDOM_STATE)
+    x_connectivity_pca = pca.fit_transform(x_connectivity_clean)
+
+    x_engineered_clean = imputer.fit_transform(x_engineered)
+    x_combined = np.hstack([x_engineered_clean, x_connectivity_pca])
+
+    return {
+        "subjects": selected_subjects,
+        "subject_ids": subject_ids,
+        "labels": labels,
+        "x_engineered": x_engineered_clean,
+        "x_combined": x_combined,
+        "engineered_feature_count": int(x_engineered_clean.shape[1]),
+        "connectivity_components": int(n_components),
+        "connectivity_variance_explained": float(pca.explained_variance_ratio_.sum()),
+    }
+
+
+def train_xgboost_classifier(x_train: np.ndarray, y_train: np.ndarray, x_test: Optional[np.ndarray] = None):
+    """Train the default XGBoost classifier with SMOTE and scaling."""
+    minority_count = int(np.sum(y_train == 0))
+    if minority_count >= 2:
+        smote = SMOTE(random_state=RANDOM_STATE, k_neighbors=min(5, minority_count - 1))
+        try:
+            x_train, y_train = smote.fit_resample(x_train, y_train)
+        except Exception:
+            pass
+
+    scaler = StandardScaler()
+    x_train_scaled = scaler.fit_transform(x_train)
+
+    positive_count = max(int(np.sum(y_train == 1)), 1)
+    negative_count = int(np.sum(y_train == 0))
+    scale_pos_weight = negative_count / positive_count
+
+    classifier = xgb.XGBClassifier(
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        scale_pos_weight=scale_pos_weight,
+        random_state=RANDOM_STATE,
+        eval_metric="logloss",
+        use_label_encoder=False,
+    )
+    classifier.fit(x_train_scaled, y_train, verbose=0)
+
+    if x_test is None:
+        return classifier, None, scaler
+
+    x_test_scaled = scaler.transform(x_test)
+    probabilities = classifier.predict_proba(x_test_scaled)[:, 1]
+    return classifier, probabilities, scaler
+
+
+def optimize_threshold(y_true: np.ndarray, y_probabilities: np.ndarray):
+    """Select the threshold that maximizes balanced accuracy."""
+    best_threshold = 0.5
+    best_balanced_accuracy = -1.0
+    best_metrics = None
+
+    for threshold in np.arange(0.1, 0.95, 0.05):
+        predictions = (y_probabilities >= threshold).astype(int)
+        balanced_accuracy = balanced_accuracy_score(y_true, predictions)
+        if balanced_accuracy <= best_balanced_accuracy:
+            continue
+
+        matrix = confusion_matrix(y_true, predictions)
+        best_balanced_accuracy = balanced_accuracy
+        best_threshold = float(threshold)
+        best_metrics = {
+            "balanced_acc": float(balanced_accuracy),
+            "accuracy": float(accuracy_score(y_true, predictions)),
+            "recall_unconscious": float(recall_score(y_true, predictions, pos_label=0, zero_division=0)),
+            "recall_conscious": float(recall_score(y_true, predictions, pos_label=1, zero_division=0)),
+            "precision": float(precision_score(y_true, predictions, zero_division=0)),
+            "f1": float(f1_score(y_true, predictions, zero_division=0)),
+            "roc_auc": float(roc_auc_score(y_true, y_probabilities)),
+            "confusion_matrix": matrix.tolist(),
+        }
+
+    return best_threshold, best_metrics
+
+
+def save_results(payload: dict, prefix: str = "results", output_dir: Path = RESULTS_DIR) -> Path:
+    """Persist a JSON result payload under results/."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    output_path = output_dir / f"{prefix}_{timestamp}.json"
+    with output_path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+        handle.write("\n")
+    return output_path

@@ -16,12 +16,12 @@ Detects hidden awareness in behaviorally unresponsive patients using the [Michig
 
 ```bash
 # Clone and set up
-git clone https://github.com/cmelnulabs/covert-awareness-detector.git
+git clone https://github.com/byteshiftlabs/covert-awareness-detector.git
 cd covert-awareness-detector
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# Run the full training pipeline (downloads data and trains models)
+# Run the full training pipeline (downloads data and trains the default model)
 ./run_full_training.sh
 ```
 
@@ -69,10 +69,12 @@ src/
   train.py                # Full training pipeline: XGBoost + PCA + SMOTE
   validate_model.py       # Overfitting checks and permutation tests
 
+tests/                    # pytest test suite
 docs/                     # Sphinx documentation
 
 run_full_training.sh      # Automated training pipeline (START HERE)
-requirements.txt          # Core dependencies
+pyproject.toml            # Project metadata and dependencies
+requirements.txt          # Core dependencies (pip)
 ```
 
 ## Model
@@ -85,7 +87,7 @@ The default training pipeline (`src/train.py` / `./run_full_training.sh`) trains
 **Original Research**: Huang, Hudetz, Mashour et al. — University of Michigan  
 **Dataset**: [OpenNeuro ds006623](https://openneuro.org/datasets/ds006623) (CC0 Public Domain)  
 **MATLAB Reference**: [Jang et al.](https://github.com/janghw4/Anesthesia-fMRI-functional-connectivity-and-balance-calculation)  
-**This Implementation**: Independent Python ML pipeline by cmelnulabs, built with AI assistance
+**This Implementation**: Independent Python ML pipeline by byteshiftlabs, built with AI assistance
 
 ## Citation
 

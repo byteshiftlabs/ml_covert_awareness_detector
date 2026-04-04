@@ -22,8 +22,20 @@ echo -e "${CYAN} Quick Test Training (5 subjects only)${NC}"
 echo -e "${PURPLE}════════════════════════════════════════════════════════${NC}"
 echo ""
 
-# Activate venv
+# Activate venv (create if missing)
+if [ ! -d "$PROJECT_DIR/venv" ]; then
+    echo -e "${YELLOW}Creating virtual environment...${NC}"
+    python3 -m venv "$PROJECT_DIR/venv"
+fi
 source "$PROJECT_DIR/venv/bin/activate"
+
+# Check if required packages are installed
+if python -c "import numpy, sklearn, xgboost, pandas, imblearn" 2>/dev/null; then
+    echo -e "${GREEN}Dependencies already installed${NC}"
+else
+    echo -e "${YELLOW}Installing dependencies into venv...${NC}"
+    python -m pip install --no-cache-dir numpy scipy pandas scikit-learn xgboost imbalanced-learn
+fi
 
 # Check dataset
 DATASET_DIR="${PROJECT_DIR}/../datasets/openneuro/ds006623"
@@ -37,7 +49,7 @@ echo -e "${YELLOW}Estimated time: 2-3 minutes${NC}"
 echo ""
 
 # Run quick training (5 subjects only)
-python src/train.py 2>&1 | tee "quick_training_$(date +%Y%m%d_%H%M%S).log"
+python src/train.py --max-subjects 5 2>&1 | tee "quick_training_$(date +%Y%m%d_%H%M%S).log"
 
 echo ""
 echo -e "${GREEN}✓ Quick training complete!${NC}"

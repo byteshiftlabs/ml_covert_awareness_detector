@@ -21,7 +21,7 @@ Usage:
     python download_dataset.py --output-dir ./data --verify-checksums
     python download_dataset.py --list-files  # Show what will be downloaded
 
-Author: cmelnulabs
+Author: byteshiftlabs
 Date: February 2026
 """
 

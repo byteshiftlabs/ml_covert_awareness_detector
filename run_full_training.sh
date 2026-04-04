@@ -135,10 +135,10 @@ if [ ${PIPESTATUS[0]} -eq 0 ]; then
     echo -e "${GREEN}║${NC}                  ${GREEN}✓ Training Complete!${NC}                         ${GREEN}║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${CYAN}📊 Results saved to: ${LOG_FILE}${NC}"
+    echo -e "${CYAN}📝 Training log saved to: ${LOG_FILE}${NC}"
     
     # Check if results directory has JSON files
-    LATEST_RESULT=$(ls -t results/results_*.json 2>/dev/null | head -1)
+    LATEST_RESULT=$(ls -t "$PROJECT_DIR"/results/results_*.json 2>/dev/null | head -1)
     if [ -n "$LATEST_RESULT" ]; then
         echo -e "${CYAN}📈 Metrics saved to: ${LATEST_RESULT}${NC}"
     fi
@@ -147,7 +147,7 @@ if [ ${PIPESTATUS[0]} -eq 0 ]; then
     echo -e "${YELLOW}Next steps:${NC}"
     echo -e "  • Review the training log: ${GREEN}less ${LOG_FILE}${NC}"
     echo -e "  • Validate model: ${GREEN}python src/validate_model.py${NC}"
-    echo -e "  • Check results: ${GREEN}ls -lh results/${NC}"
+    echo -e "  • Check results: ${GREEN}ls -lh ${PROJECT_DIR}/results/${NC}"
     
 else
     echo ""
