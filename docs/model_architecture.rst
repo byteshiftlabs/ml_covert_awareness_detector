@@ -32,8 +32,8 @@ The process has three steps:
    its best guess — conscious or unconscious — along with a confidence score.
 
 
-Available Models
-================
+Implemented Model
+=================
 
 This codebase implements and runs a single default classifier: **XGBoost**.
 The pipeline applies PCA to the full connectivity matrix, uses SMOTE to
@@ -81,8 +81,12 @@ How to Run
    # Train and evaluate XGBoost with LOSO cross-validation
    python src/train.py
 
+   # Quick smoke run on the first 5 subjects
+   python src/train.py --max-subjects 5
+
 This runs the default XGBoost pipeline (PCA + SMOTE + threshold tuning)
-using Leave-One-Subject-Out CV and prints per-subject results.
+using Leave-One-Subject-Out CV, prints the metrics to stdout, and writes a
+JSON summary under ``results/``.
 
 
 Next Steps
