@@ -42,7 +42,7 @@ Step 3: Clone the Repository
 .. code-block:: bash
 
    sudo apt install git
-   git clone https://github.com/your-username/covert-awareness-detector.git
+   git clone https://github.com/byteshiftlabs/covert-awareness-detector.git
    cd covert-awareness-detector
 
 
@@ -92,4 +92,4 @@ If you encounter issues:
 Next Steps
 ==========
 
-See :doc:`dataset` for dataset details and run `src/train.py` (or `./run_full_training.sh`) to execute the default XGBoost pipeline.
+See :doc:`dataset` for dataset details and run ``python src/train.py`` (or ``./run_full_training.sh``) to execute the default XGBoost pipeline.
