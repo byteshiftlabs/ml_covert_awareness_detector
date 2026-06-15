@@ -104,7 +104,7 @@ Our machine learning pipeline transforms fMRI brain scans into automated conscio
    
    * :doc:`dataset` - Detailed information about the fMRI data
    * :doc:`feature_extraction` - Complete feature extraction methods
-   * :doc:`model_architectures` - All model architectures and comparisons
+   * :doc:`model_architecture` - All model architectures and comparisons
 
 
 Relation to Original Research
@@ -205,7 +205,7 @@ Ready to get started?
 
 1. :doc:`installation` - Set up the software
 2. :doc:`dataset` - Understand the fMRI data
-3. :doc:`model_architectures` - Explore the models
+3. :doc:`model_architecture` - Explore the models
 
 .. note::
    This is an open-source research project. Questions and contributions welcome via GitHub!
