@@ -40,11 +40,7 @@ This is where we transform raw brain signals into meaningful patterns that disti
 
 **Connectivity Matrices**: We measure how synchronized different brain regions are with each other. If two regions consistently activate together, they're "connected." This creates a map of functional connections across the entire brain—essentially a snapshot of how the brain's regions communicate.
 
-**ISD (Integration-Segregation Difference)**: This is the key biomarker for consciousness. The theory is that conscious brains maintain a balance between two properties:
-  - *Integration*: how efficiently information flows across the entire brain network
-  - *Segregation*: how well distinct brain regions maintain specialized, local processing
-  
-When consciousness is lost, ISD decreases significantly. ISD quantifies this shift by computing the difference between these two properties (efficiency minus clustering).
+**ISD (Integration-Segregation Difference)**: This measures the balance between integration (how efficiently information flows across the entire brain network) and segregation (how well distinct brain regions maintain specialized, local processing). ISD quantifies this by computing the difference between these two properties (efficiency minus clustering).
 
 **Network Summary Statistics**: We also compute basic graph properties from the connectivity matrix—mean degree, strength, and density—to capture the overall topology of the brain network at each state.
 
