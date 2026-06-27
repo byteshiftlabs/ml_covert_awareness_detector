@@ -22,7 +22,11 @@ echo -e "${CYAN} Quick Test Training (5 subjects only)${NC}"
 echo -e "${PURPLE}════════════════════════════════════════════════════════${NC}"
 echo ""
 
-# Activate venv
+# Activate venv (create if missing)
+if [ ! -d "$PROJECT_DIR/venv" ]; then
+    echo -e "${YELLOW}Creating virtual environment...${NC}"
+    python3 -m venv "$PROJECT_DIR/venv"
+fi
 source "$PROJECT_DIR/venv/bin/activate"
 
 # Check dataset
