@@ -21,7 +21,7 @@ cd covert-awareness-detector
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# Run the full training pipeline (downloads data and trains models)
+# Run the full training pipeline (downloads data and trains the default model)
 ./run_full_training.sh
 ```
 
