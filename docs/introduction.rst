@@ -44,13 +44,15 @@ Why This Matters
 Our Solution
 ------------
 
-This project implements **deep learning models** to automate consciousness detection from fMRI data, building on the scientific foundations laid by the Michigan team.
+This project implements a classical machine learning pipeline to automate
+consciousness detection from fMRI data, building on the scientific foundations
+laid by the Michigan team.
 
 **What We Provide:**
 
 * **Automated classification** of consciousness states
-* **Cross-subject generalization** using neural networks
-* **Interpretable predictions** with attention mechanisms
+* **Cross-subject generalization** using leave-one-subject-out validation
+* **Interpretable features** based on connectivity, ISD, and graph metrics
 * **Production-ready code** for deployment
 * **Extensible framework** for new models and analyses
 
@@ -60,9 +62,9 @@ Approach Overview
 
 Our machine learning pipeline transforms fMRI brain scans into automated consciousness predictions:
 
-1. **Input**: fMRI data from the Michigan Human Anesthesia Dataset (26 subjects under propofol sedation)
+1. **Input**: preprocessed connectivity derivatives from the Michigan Human Anesthesia Dataset (25 subjects used for modelling)
 2. **Feature Extraction**: Extract connectivity patterns and network metrics from brain activity
-3. **Classification**: Train machine learning models to predict conscious vs. unconscious states
+3. **Classification**: Train an XGBoost classifier to predict conscious vs. unconscious states
 4. **Output**: Automated consciousness detection
 
 .. seealso::
@@ -111,7 +113,7 @@ Target Audience
 This project is designed for:
 
 **Machine Learning Practitioners**
-   Apply deep learning to neuroscience problems. No neuroscience background required - we explain the domain concepts.
+   Apply classical machine learning to neuroscience problems. No neuroscience background required - we explain the domain concepts.
 
 **Neuroscience Researchers**
    Automated analysis of fMRI connectivity data using modern ML techniques. Replicate and extend published consciousness research.
@@ -120,7 +122,7 @@ This project is designed for:
    Research tools for consciousness assessment. Potential applications in anesthesia monitoring and disorders of consciousness.
 
 **Data Scientists & Students**
-   Complete example of applied ML on challenging real-world data with graph neural networks and time-series analysis.
+   Complete example of applied ML on challenging real-world data with connectivity features and subject-level cross-validation.
 
 .. danger::
    **CRITICAL DISCLAIMER**: This is a research tool, NOT a medical device. This software:

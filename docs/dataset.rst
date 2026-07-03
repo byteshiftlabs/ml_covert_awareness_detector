@@ -136,8 +136,9 @@ The project uses **Leave-One-Subject-Out (LOSO)** cross-validation:
 4. Repeat for all 25 subjects.
 
 This ensures the model is always tested on a subject it has never seen during
-training. All three classifiers use **balanced class weights** to account for
-the fact that there are more conscious than unconscious samples.
+training. The default XGBoost pipeline uses SMOTE oversampling and class
+weighting to account for the fact that there are more conscious than
+unconscious samples.
 
 
 Subjects

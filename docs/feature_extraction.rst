@@ -117,9 +117,10 @@ For each brain scan, the feature extraction produces a small dictionary:
 - 9 statistical summaries
 - Optionally, the full set of ~99,000 pairwise connectivity values
 
-In practice, the classifier uses the compact set of 17 features. The
-full connectivity vector is available but is high-dimensional and
-requires dimensionality reduction (e.g. PCA) before use.
+In practice, the default training pipeline uses 34 engineered features
+(17 raw summary features plus 17 per-subject deviation features) together
+with PCA-reduced connectivity components. The full connectivity vector is
+available but is high-dimensional and therefore reduced before use.
 
 .. code-block:: python
 
@@ -134,6 +135,6 @@ requires dimensionality reduction (e.g. PCA) before use.
 Next Steps
 ==========
 
-- See :doc:`model_architecture` for how these features are used by the classifiers.
+- See :doc:`model_architecture` for how these features are used by the default classifier.
 - See :doc:`dataset` for information about the fMRI data.
 - See :doc:`installation` for setup and running instructions.
