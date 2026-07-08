@@ -1,28 +1,25 @@
 Covert Awareness Detector Documentation
 =======================================
 
-Welcome to the Covert Awareness Detector documentation. This project implements
-an XGBoost-based machine learning pipeline to detect hidden consciousness in
-patients who appear behaviorally unresponsive but still show neural signatures
-of awareness.
+These docs keep three things separate: the 2018 paper, the later open-dataset
+connectivity workflow, and this repository's Python model.
 
-**Building on Research by Huang et al. (University of Michigan)**
-
-This is a Python machine learning implementation inspired by the groundbreaking 
-neuroscience research of Huang, Hudetz, Mashour et al., who identified covert 
-consciousness signatures in fMRI data during propofol anesthesia.
+The paper used task-based fMRI mental imagery in a proof-of-principle study.
+This repository uses a separate connectivity-based XGBoost pipeline on the open
+derivatives and the linked MATLAB reference workflow.
 
 .. toctree::
    :maxdepth: 2
    :caption: Getting Started:
 
    introduction
+   paper_background
    installation
    dataset
 
 .. toctree::
    :maxdepth: 2
-   :caption: Core Documentation:
+   :caption: Reference:
 
    feature_extraction
    model_architecture

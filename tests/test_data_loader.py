@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 from config import N_ROIS, FD_THRESHOLD, FD_COLUMN
 from data_loader import filter_by_motion, compute_connectivity
 

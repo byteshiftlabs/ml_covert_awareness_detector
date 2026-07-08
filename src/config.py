@@ -1,11 +1,12 @@
 """
-Configuration for the consciousness detection pipeline.
+Configuration for the connectivity-based training pipeline.
 
-Derived directly from the paper's MATLAB code (main.m):
-  - 446 ROIs from 4S456Parcels atlas
-  - xcp_d_without_GSR_bandpass preprocessing
-  - 7 conditions: rest1, imagery1(awake), preLOR, LOR, postROR, imagery4, rest2
-  - Motion censoring: FD column (col 8) < 0.8
+Derived from the linked MATLAB reference workflow for the open anesthesia fMRI
+resource, rather than from the 2018 imagery paper alone:
+    - 446 ROIs from 4S456Parcels atlas
+    - xcp_d_without_GSR_bandpass preprocessing
+    - 7 conditions: rest1, imagery1(awake), preLOR, LOR, postROR, imagery4, rest2
+    - Motion censoring: FD column (col 8) < 0.8
 """
 
 from pathlib import Path
@@ -17,7 +18,7 @@ DERIVATIVES = DATA_ROOT / "derivatives"
 XCP_DIR = DERIVATIVES / "xcp_d_without_GSR_bandpass_output"
 RESULTS_DIR = PROJECT_ROOT / "results"
 
-# ── Subject list (ordered as in paper) ──────────────────────────────────────
+# ── Subject list (ordered as in linked MATLAB reference) ────────────────────
 SUBJECTS = [
     "sub-02", "sub-03", "sub-04", "sub-05", "sub-06", "sub-07",
     "sub-11", "sub-12", "sub-13", "sub-14", "sub-15", "sub-16",
@@ -25,9 +26,9 @@ SUBJECTS = [
     "sub-23", "sub-24", "sub-25", "sub-26", "sub-27", "sub-28",
     "sub-29",
 ]
-N_SUBJECTS = len(SUBJECTS)  # 25 (sub-30 has no timing data in paper)
+N_SUBJECTS = len(SUBJECTS)  # 25 (sub-30 has no timing data in reference workflow)
 
-# ── LOR / ROR times (TR indices, from paper main.m) ────────────────────────
+# ── LOR / ROR times (frame indices from linked MATLAB reference) ───────────
 # LOR_TIME: TR index in run-2 at which the subject lost responsiveness
 # ROR_TIME: TR index in run-3 at which the subject regained responsiveness
 LOR_TIME = {
@@ -50,11 +51,11 @@ ROR_TIME = {
     "sub-29": 2270,
 }
 
-# sub-29 is special: no post-ROR segment (paper uses all of run-3 for LOR)
+# sub-29 is special: no post-ROR segment (reference workflow uses all of run-3)
 SPECIAL_SUBJECTS = {"sub-29"}
 
 # ── Scan / atlas parameters ────────────────────────────────────────────────
-N_ROIS = 446               # first 446 of 456 parcels used by paper
+N_ROIS = 446               # first 446 of 456 parcels used by reference workflow
 ATLAS = "4S456Parcels"
 FD_THRESHOLD = 0.8          # framewise displacement cutoff
 FD_COLUMN = 7               # 0-indexed (column 8 in MATLAB 1-indexed)
