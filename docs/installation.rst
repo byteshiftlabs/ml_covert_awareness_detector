@@ -8,13 +8,19 @@ This page covers the minimal setup needed to run the repository.
 Environment
 ===========
 The installation steps and default training pipeline have been tested on an
-Ubuntu 24.04 WSL image.
+Ubuntu 24.04 WSL image with Python 3.12.3.
 
 If you are on Windows, install WSL first:
 
 https://docs.microsoft.com/en-us/windows/wsl/install
 
-The commands below assume a Linux-like shell environment with Python 3,
+The published package metadata and release lockfile currently target Python
+3.11+.
+
+If your system ``python3`` is older than 3.11, install a newer interpreter
+before creating ``.venv``.
+
+The commands below assume a Linux-like shell environment with Python 3.11+,
 ``venv``, and ``pip`` available.
 
 .. code-block:: bash
@@ -27,6 +33,9 @@ The commands below assume a Linux-like shell environment with Python 3,
    source .venv/bin/activate
    pip install --upgrade pip setuptools wheel
    pip install -r requirements-lock.txt
+
+The helper scripts ``./run_full_training.sh`` and ``./run_quick_training.sh``
+perform the same Python-version check before they create or activate ``.venv``.
 
 
 

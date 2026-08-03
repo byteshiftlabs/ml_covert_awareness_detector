@@ -9,6 +9,7 @@
 set -e
 
 # Colors
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
@@ -18,11 +19,35 @@ NC='\033[0m'
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_DIR/.venv"
 REQUIREMENTS_FILE="$PROJECT_DIR/requirements-lock.txt"
+DATASET_DIR="${DATASET_DIR:-$PROJECT_DIR/../datasets/openneuro/ds006623}"
+
+require_supported_python() {
+    local interpreter="$1"
+    "$interpreter" - <<'PY'
+import sys
+
+required = (3, 11)
+current = sys.version_info[:2]
+if current < required:
+    raise SystemExit(
+        f"Python {required[0]}.{required[1]}+ is required for this release; "
+        f"found {current[0]}.{current[1]}"
+    )
+PY
+}
 
 echo -e "${PURPLE}════════════════════════════════════════════════════════${NC}"
 echo -e "${CYAN} Quick Test Training (5 subjects only)${NC}"
 echo -e "${PURPLE}════════════════════════════════════════════════════════${NC}"
 echo ""
+
+echo -e "${YELLOW}Checking Python version...${NC}"
+if require_supported_python python3; then
+    echo -e "${GREEN}Python 3.11+ detected${NC}"
+else
+    echo -e "${RED}Python 3.11+ is required for this release${NC}"
+    exit 1
+fi
 
 # Activate venv (create if missing)
 if [ ! -d "$VENV_DIR" ]; then
@@ -40,10 +65,9 @@ else
 fi
 
 # Check dataset
-DATASET_DIR="${PROJECT_DIR}/../datasets/openneuro/ds006623"
 if [ ! -d "$DATASET_DIR/derivatives/xcp_d_without_GSR_bandpass_output" ]; then
     echo -e "${YELLOW}Downloading dataset first...${NC}"
-    python src/download_dataset.py --output-dir "$DATASET_DIR"
+    python src/download_dataset.py --output-dir "$DATASET_DIR" --max-subjects 5
 fi
 
 echo -e "${CYAN}Running training on first 5 subjects...${NC}"

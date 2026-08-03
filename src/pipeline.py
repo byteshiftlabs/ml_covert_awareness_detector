@@ -28,6 +28,19 @@ from data_loader import load_subject_all_conditions
 from features import extract_all_features
 
 
+def _json_ready(value):
+    """Convert NumPy-heavy result payloads into JSON-safe Python objects."""
+    if isinstance(value, dict):
+        return {key: _json_ready(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
 def select_subjects(subjects: Optional[Iterable[str]] = None, max_subjects: Optional[int] = None) -> list[str]:
     """Return the ordered subject list, optionally truncated for smoke runs."""
     selected_subjects = list(SUBJECTS if subjects is None else subjects)
@@ -162,7 +175,7 @@ def optimize_threshold(y_true: np.ndarray, y_probabilities: np.ndarray):
             "precision": float(precision_score(y_true, predictions, zero_division=0)),
             "f1": float(f1_score(y_true, predictions, zero_division=0)),
             "roc_auc": float(roc_auc_score(y_true, y_probabilities)),
-            "confusion_matrix": matrix.tolist(),
+            "confusion_matrix": matrix,
         }
 
     return best_threshold, best_metrics
@@ -174,6 +187,6 @@ def save_results(payload: dict, prefix: str = "results", output_dir: Path = RESU
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     output_path = output_dir / f"{prefix}_{timestamp}.json"
     with output_path.open("w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2)
+        json.dump(_json_ready(payload), handle, indent=2)
         handle.write("\n")
     return output_path
