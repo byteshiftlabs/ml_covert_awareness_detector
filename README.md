@@ -11,9 +11,11 @@ connectivity during anesthesia.
 
 ## Overview
 
-This is a Python pipeline for research use, built on the [Michigan Human Anesthesia fMRI Dataset](https://openneuro.org/datasets/ds006623) (OpenNeuro ds006623). The repository does not reproduce the 2018 paper's main task-fMRI analysis. Instead, it trains a separate connectivity-based classifier on the open derivatives and uses a simpler ISD calculation based on the linked MATLAB code.
+This repository contains a Python research pipeline built on the [Michigan Human Anesthesia fMRI Dataset](https://openneuro.org/datasets/ds006623) (OpenNeuro ds006623).
 
-The current ISD feature implementation is based on the MATLAB code, but it is not an exact copy. It still uses efficiency minus clustering, but the graph calculations are simpler in Python, so the numbers will not exactly match the MATLAB/BCT output.
+It does **not** reproduce the 2018 paper's main task-fMRI analysis. Instead, it trains a separate connectivity-based classifier on the public derivatives.
+
+The ISD feature is a Python approximation based on the linked MATLAB reference. It keeps the same basic idea, `efficiency - clustering`, but the graph calculations are simpler, so the values will not exactly match the MATLAB/BCT output.
 
 ## Quick Start
 
@@ -28,7 +30,10 @@ cd covert-awareness-detector
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-lock.txt
 
-# Run the full training pipeline (downloads data and trains the default model)
+# Quick smoke run: downloads only the first 5 supported subjects
+./run_quick_training.sh
+
+# Full run: downloads the supported dataset and trains the default model
 ./run_full_training.sh
 ```
 
@@ -92,11 +97,14 @@ requirements-lock.txt     # Release-verified lockfile
 
 - Python 3.11+
 - Bash-compatible shell environment for the helper scripts
-- Roughly 1.8 GB of free disk space for the OpenNeuro derivatives download
+- Roughly 350 MB of free disk space for the quick run
+- Roughly 1.8 GB of free disk space for the full download
 
-## Model
+## Default Model
 
 The default training pipeline (`src/train.py` / `./run_full_training.sh`) trains and validates the **XGBoost** classifier only (full connectivity + PCA + SMOTE + threshold tuning).
+
+For installation details and longer documentation, see [docs/](docs/) and [docs/installation.rst](docs/installation.rst).
 
 
 ## Acknowledgments
