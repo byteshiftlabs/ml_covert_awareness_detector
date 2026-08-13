@@ -2,12 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/byteshiftlabs/covert-awareness-detector/actions/workflows/ci.yml/badge.svg)](https://github.com/byteshiftlabs/covert-awareness-detector/actions/workflows/ci.yml)
 [![DOI](https://img.shields.io/badge/Dataset-OpenNeuro%20ds006623-orange.svg)](https://openneuro.org/datasets/ds006623)
 
 Machine learning pipeline for studying covert-awareness-related fMRI functional
 connectivity during anesthesia.
 
-> **Disclosure:** This software was developed with AI assistance under human supervision. It is actively being improved, validated, and documented.
+> **Disclosure:** This software was developed with AI assistance under human supervision. The public release path is verified with the pinned lockfile and the automated test suite documented below.
 
 ## Overview
 
@@ -29,6 +30,9 @@ git clone https://github.com/byteshiftlabs/covert-awareness-detector.git
 cd covert-awareness-detector
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-lock.txt
+
+# Local verification: same pytest entrypoint used in CI
+pytest
 
 # Quick smoke run: downloads only the first 5 supported subjects
 ./run_quick_training.sh
@@ -91,6 +95,18 @@ run_full_training.sh      # Automated training pipeline (START HERE)
 pyproject.toml            # Project metadata and dependencies
 requirements.txt          # Minimum-spec dependencies
 requirements-lock.txt     # Release-verified lockfile
+```
+
+## Testing
+
+Public CI runs on GitHub Actions for every push and pull request using Python 3.12 and the pinned `requirements-lock.txt` environment.
+
+Run the same entrypoint locally:
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-lock.txt
+pytest
 ```
 
 ## Requirements
