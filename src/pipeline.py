@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import time
+import warnings
 from pathlib import Path
-from typing import Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 import numpy as np
 import xgboost as xgb
@@ -28,7 +29,7 @@ from data_loader import load_subject_all_conditions
 from features import extract_all_features
 
 
-def _json_ready(value):
+def _json_ready(value: Any) -> Any:
     """Convert NumPy-heavy result payloads into JSON-safe Python objects."""
     if isinstance(value, dict):
         return {key: _json_ready(item) for key, item in value.items()}
@@ -56,6 +57,9 @@ def build_feature_dataset(
 ) -> dict:
     """Load matrices, extract features, and assemble the training design matrix."""
     selected_subjects = select_subjects(subjects=subjects, max_subjects=max_subjects)
+    if not selected_subjects:
+        raise ValueError("At least one subject is required to build the feature dataset")
+
     all_features = []
     all_connectivity_matrices = []
 
@@ -114,15 +118,23 @@ def build_feature_dataset(
     }
 
 
-def train_xgboost_classifier(x_train: np.ndarray, y_train: np.ndarray, x_test: Optional[np.ndarray] = None):
+def train_xgboost_classifier(
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: Optional[np.ndarray] = None,
+) -> tuple[xgb.XGBClassifier, Optional[np.ndarray], StandardScaler]:
     """Train the default XGBoost classifier with SMOTE and scaling."""
     minority_count = int(np.sum(y_train == 0))
     if minority_count >= 2:
         smote = SMOTE(random_state=RANDOM_STATE, k_neighbors=min(5, minority_count - 1))
         try:
             x_train, y_train = smote.fit_resample(x_train, y_train)
-        except Exception:
-            pass
+        except ValueError as error:
+            warnings.warn(
+                f"SMOTE resampling failed; continuing without oversampling: {error}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
     scaler = StandardScaler()
     x_train_scaled = scaler.fit_transform(x_train)
@@ -152,7 +164,7 @@ def train_xgboost_classifier(x_train: np.ndarray, y_train: np.ndarray, x_test: O
     return classifier, probabilities, scaler
 
 
-def optimize_threshold(y_true: np.ndarray, y_probabilities: np.ndarray):
+def optimize_threshold(y_true: np.ndarray, y_probabilities: np.ndarray) -> tuple[float, dict[str, Any]]:
     """Select the threshold that maximizes balanced accuracy."""
     best_threshold = 0.5
     best_balanced_accuracy = -1.0
