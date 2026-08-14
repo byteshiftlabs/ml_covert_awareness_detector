@@ -100,6 +100,10 @@ requirements-lock.txt     # Release-verified lockfile
 ## Testing
 
 Public CI runs on GitHub Actions for every push and pull request using Python 3.12 and the pinned `requirements-lock.txt` environment.
+It now proves both public entrypoints:
+
+- `pytest`
+- `./run_quick_training.sh`
 
 Run the same entrypoint locally:
 
@@ -107,6 +111,9 @@ Run the same entrypoint locally:
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-lock.txt
 pytest
+
+# Documented quick smoke path, also exercised in CI
+./run_quick_training.sh
 ```
 
 ## Requirements

@@ -17,10 +17,21 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Create virtual environment and install dependencies
         run: |
+          python -m venv .venv
+          . .venv/bin/activate
           python -m pip install --upgrade pip
           python -m pip install -r requirements-lock.txt
 
       - name: Run test suite
-        run: pytest
+        run: |
+          . .venv/bin/activate
+          pytest
+
+      - name: Run quick training smoke path
+        env:
+          DATASET_DIR: ${{ runner.temp }}/openneuro/ds006623
+        run: |
+          . .venv/bin/activate
+          ./run_quick_training.sh

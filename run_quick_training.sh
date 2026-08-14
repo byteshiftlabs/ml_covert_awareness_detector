@@ -20,6 +20,7 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_DIR/.venv"
 REQUIREMENTS_FILE="$PROJECT_DIR/requirements-lock.txt"
 DATASET_DIR="${DATASET_DIR:-$PROJECT_DIR/../datasets/openneuro/ds006623}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 require_supported_python() {
     local interpreter="$1"
@@ -42,7 +43,7 @@ echo -e "${PURPLE}════════════════════�
 echo ""
 
 echo -e "${YELLOW}Checking Python version...${NC}"
-if require_supported_python python3; then
+if require_supported_python "$PYTHON_BIN"; then
     echo -e "${GREEN}Python 3.11+ detected${NC}"
 else
     echo -e "${RED}Python 3.11+ is required for this release${NC}"
@@ -52,7 +53,7 @@ fi
 # Activate venv (create if missing)
 if [ ! -d "$VENV_DIR" ]; then
     echo -e "${YELLOW}Creating virtual environment...${NC}"
-    python3 -m venv "$VENV_DIR"
+    "$PYTHON_BIN" -m venv "$VENV_DIR"
 fi
 source "$VENV_DIR/bin/activate"
 
