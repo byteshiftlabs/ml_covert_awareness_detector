@@ -41,6 +41,15 @@ pytest
 ./run_full_training.sh
 ```
 
+## Beginner Ramp-Up
+
+If you are new to this repository, use this order:
+
+1. Create the pinned virtual environment and run `pytest` before touching the training scripts.
+2. Run `./run_quick_training.sh` before the full dataset path so you can confirm the public smoke workflow on a small supported subject set.
+3. Read `src/train.py`, `src/data_loader.py`, and `src/features.py` in that order to understand the pipeline from orchestration to raw feature construction.
+4. Use the Testing and Default Model sections below to separate the verified current release contract from follow-up research work.
+
 ## How It Works
 
 The steps below describe the current Python classifier, not the original
@@ -116,6 +125,8 @@ pytest
 ./run_quick_training.sh
 ```
 
+The reproducible public-release contract is the pinned lockfile path above: create a clean virtual environment, install `requirements-lock.txt`, run `pytest`, and then run `./run_quick_training.sh`. GitHub Actions verifies that exact sequence.
+
 ## Requirements
 
 - Python 3.11+
@@ -128,7 +139,6 @@ pytest
 The default training pipeline (`src/train.py` / `./run_full_training.sh`) trains and validates the **XGBoost** classifier only (full connectivity + PCA + SMOTE + threshold tuning).
 
 For installation details and longer documentation, see [docs/](docs/) and [docs/installation.rst](docs/installation.rst).
-
 
 ## Acknowledgments
 
