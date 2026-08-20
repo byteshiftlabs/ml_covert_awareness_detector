@@ -11,6 +11,7 @@ import numpy as np
 
 from pipeline import (
     build_feature_dataset,
+    fit_fold_features,
     optimize_threshold,
     save_results,
     train_xgboost_classifier,
@@ -87,45 +88,31 @@ def main(argv=None):
         on_subject_loaded=lambda idx, total, _subject: progress_bar(idx, total, load_start, prefix='Loading'),
     )
     progress_bar(len(dataset['subjects']), len(dataset['subjects']), load_start, prefix='Loading')
-    print(f"✓ Loaded {dataset['x_combined'].shape[0]} samples from {len(dataset['subjects'])} subjects\n")
-
-    # ========================================================================
-    # STEP 2: Advanced feature engineering
-    # ========================================================================
-    print("Feature engineering...")
-
-    x_combined = dataset['x_combined']
+    x_engineered = dataset['x_engineered']
+    x_connectivity = dataset['x_connectivity']
     subject_ids = dataset['subject_ids']
     labels = dataset['labels']
+    print(f"✓ Loaded {x_engineered.shape[0]} samples from {len(dataset['subjects'])} subjects\n")
+
+    # ========================================================================
+    # STEP 2: Feature engineering
+    # ========================================================================
+    print("Feature engineering...")
     print(f"✓ Engineered {dataset['engineered_feature_count']} features\n")
+    print(f"Conscious: {np.sum(labels == 1)}, Unconscious: {np.sum(labels == 0)}\n")
 
     # ========================================================================
-    # STEP 3: PCA on full connectivity
-    # ========================================================================
-    print("PCA dimensionality reduction...")
-
-    print(
-        f"✓ PCA: 99K features → {dataset['connectivity_components']} components "
-        f"({dataset['connectivity_variance_explained']:.1%} variance)\n"
-    )
-
-    # ========================================================================
-    # STEP 4: Combine all features
-    # ========================================================================
-    print("Combining features...")
-
-    print(f"✓ Final matrix: {x_combined.shape[0]} samples × {x_combined.shape[1]} features")
-    print(f"  Conscious: {np.sum(labels == 1)}, Unconscious: {np.sum(labels == 0)}\n")
-
-    # ========================================================================
-    # STEP 5: Train with XGBoost + SMOTE
+    # STEP 3: Train with LOSO-CV (imputation + PCA refit per fold)
     # ========================================================================
     print("Training with LOSO-CV...")
-    print()
+    print("Imputation and PCA are refit inside each fold so the held-out")
+    print("subject's data never shapes its own features.\n")
 
     unique_subjects = np.unique(subject_ids)
     all_labels = []
     all_probas = []
+    fold_components = []
+    fold_variance_explained = []
 
     cv_start = time.time()
     for i, test_subject in enumerate(unique_subjects):
@@ -133,10 +120,17 @@ def main(argv=None):
         test_mask = subject_ids == test_subject
         train_mask = ~test_mask
 
-        x_train = x_combined[train_mask]
+        x_train, x_test, fold_meta = fit_fold_features(
+            x_engineered[train_mask],
+            x_connectivity[train_mask],
+            x_engineered[test_mask],
+            x_connectivity[test_mask],
+        )
         y_train = labels[train_mask]
-        x_test = x_combined[test_mask]
         y_test = labels[test_mask]
+
+        fold_components.append(fold_meta['connectivity_components'])
+        fold_variance_explained.append(fold_meta['connectivity_variance_explained'])
 
         _, y_proba, _ = train_xgboost_classifier(x_train, y_train, x_test)
         all_labels.extend(y_test)
@@ -144,7 +138,11 @@ def main(argv=None):
 
     progress_bar(len(unique_subjects), len(unique_subjects), cv_start, prefix='Training')
     cv_elapsed = time.time() - cv_start
-    print(f"✓ Completed {len(unique_subjects)} LOSO-CV folds in {time.strftime('%M:%S', time.gmtime(cv_elapsed))}\n")
+    print(f"✓ Completed {len(unique_subjects)} LOSO-CV folds in {time.strftime('%M:%S', time.gmtime(cv_elapsed))}")
+    print(
+        f"  PCA per fold: {np.mean(fold_components):.0f} components "
+        f"({np.mean(fold_variance_explained):.1%} mean variance explained)\n"
+    )
 
     all_labels = np.array(all_labels)
     all_probas = np.array(all_probas)
@@ -194,7 +192,7 @@ def main(argv=None):
     print(f"• Optimal decision threshold: {best_threshold:.2f}")
     print()
     print("Key techniques:")
-    print(f"  - Full connectivity (99K features) → PCA ({dataset['connectivity_components']} components)")
+    print(f"  - Full connectivity (99K features) → PCA (~{np.mean(fold_components):.0f} components, refit per LOSO fold)")
     print("  - XGBoost classifier with SMOTE oversampling")
     print("  - Per-subject deviation features")
     print("  - Threshold tuning for class balance")
@@ -204,10 +202,10 @@ def main(argv=None):
             'model': 'xgboost',
             'subject_count': len(dataset['subjects']),
             'subjects': dataset['subjects'],
-            'sample_count': int(x_combined.shape[0]),
+            'sample_count': int(x_engineered.shape[0]),
             'engineered_feature_count': dataset['engineered_feature_count'],
-            'pca_components': dataset['connectivity_components'],
-            'connectivity_variance_explained': dataset['connectivity_variance_explained'],
+            'pca_components_mean': float(np.mean(fold_components)),
+            'connectivity_variance_explained_mean': float(np.mean(fold_variance_explained)),
             'decision_threshold': best_threshold,
             'metrics': best_metrics,
         }

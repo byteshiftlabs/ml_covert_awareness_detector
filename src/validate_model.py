@@ -8,7 +8,7 @@ import warnings
 from sklearn.metrics import balanced_accuracy_score, confusion_matrix, recall_score
 
 from config import RANDOM_STATE
-from pipeline import build_feature_dataset, optimize_threshold, train_xgboost_classifier
+from pipeline import build_feature_dataset, fit_fold_features, optimize_threshold, train_xgboost_classifier
 
 warnings.filterwarnings('ignore')
 
@@ -20,11 +20,12 @@ def main():
     # Prepare data
     print("\nLoading data...")
     dataset = build_feature_dataset()
-    x_combined = dataset['x_combined']
+    x_engineered = dataset['x_engineered']
+    x_connectivity = dataset['x_connectivity']
     labels = dataset['labels']
     subject_ids = dataset['subject_ids']
     engineered_feature_count = dataset['engineered_feature_count']
-    print(f"Feature matrix: {x_combined.shape}\n")
+    print(f"Engineered features: {x_engineered.shape}, raw connectivity: {x_connectivity.shape}\n")
 
     # CHECK 1: Holdout test (5 subjects held out)
     print("CHECK 1: HOLDOUT TEST")
@@ -34,8 +35,15 @@ def main():
     test_subjects = np.random.choice(unique_subjects, size=5, replace=False)
 
     test_mask = np.isin(subject_ids, test_subjects)
-    x_train, y_train = x_combined[~test_mask], labels[~test_mask]
-    x_test, y_test = x_combined[test_mask], labels[test_mask]
+    train_mask = ~test_mask
+    y_train, y_test = labels[train_mask], labels[test_mask]
+
+    # PCA/imputation are fit on the training split only, then applied to the
+    # held-out subjects, so no held-out data shapes its own features.
+    x_train, x_test, _ = fit_fold_features(
+        x_engineered[train_mask], x_connectivity[train_mask],
+        x_engineered[test_mask], x_connectivity[test_mask],
+    )
 
     clf, y_proba, _ = train_xgboost_classifier(x_train, y_train, x_test)
     best_threshold, threshold_metrics = optimize_threshold(y_test, y_proba)
@@ -73,10 +81,15 @@ def main():
     print("-" * 70)
     cv_scores = []
     for test_subject in unique_subjects[:10]:
-        test_mask = subject_ids == test_subject
-        x_train_cv, y_train_cv = x_combined[~test_mask], labels[~test_mask]
-        x_test_cv, y_test_cv = x_combined[test_mask], labels[test_mask]
-        
+        cv_test_mask = subject_ids == test_subject
+        cv_train_mask = ~cv_test_mask
+        y_train_cv, y_test_cv = labels[cv_train_mask], labels[cv_test_mask]
+
+        x_train_cv, x_test_cv, _ = fit_fold_features(
+            x_engineered[cv_train_mask], x_connectivity[cv_train_mask],
+            x_engineered[cv_test_mask], x_connectivity[cv_test_mask],
+        )
+
         _, y_proba_cv, _ = train_xgboost_classifier(x_train_cv, y_train_cv, x_test_cv)
         y_pred_cv = (y_proba_cv >= best_threshold).astype(int)
         cv_scores.append(balanced_accuracy_score(y_test_cv, y_pred_cv))

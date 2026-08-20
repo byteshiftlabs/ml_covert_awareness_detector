@@ -10,7 +10,7 @@ def test_main_handles_list_confusion_matrix_in_reporting(monkeypatch, capsys, tm
         "subjects": ["sub-01", "sub-02"],
         "subject_ids": np.array(["sub-01", "sub-01", "sub-02", "sub-02"]),
         "labels": np.array([0, 1, 0, 1]),
-        "x_combined": np.array(
+        "x_engineered": np.array(
             [
                 [0.0, 0.1],
                 [0.2, 0.3],
@@ -18,15 +18,27 @@ def test_main_handles_list_confusion_matrix_in_reporting(monkeypatch, capsys, tm
                 [0.6, 0.7],
             ]
         ),
+        "x_connectivity": np.array(
+            [
+                [1.0, 1.1],
+                [1.2, 1.3],
+                [1.4, 1.5],
+                [1.6, 1.7],
+            ]
+        ),
         "engineered_feature_count": 2,
-        "connectivity_components": 1,
-        "connectivity_variance_explained": 0.5,
     }
     saved = {}
 
     def fake_build_feature_dataset(*, max_subjects=None, on_subject_loaded=None):
         assert max_subjects is None
         return dataset
+
+    def fake_fit_fold_features(x_engineered_train, x_connectivity_train, x_engineered_test, x_connectivity_test):
+        x_train = np.hstack([x_engineered_train, x_connectivity_train])
+        x_test = np.hstack([x_engineered_test, x_connectivity_test])
+        metadata = {"connectivity_components": 1, "connectivity_variance_explained": 0.5}
+        return x_train, x_test, metadata
 
     def fake_train_xgboost_classifier(_x_train, _y_train, x_test=None):
         probabilities = np.linspace(0.2, 0.8, num=len(x_test)) if x_test is not None else None
@@ -49,6 +61,7 @@ def test_main_handles_list_confusion_matrix_in_reporting(monkeypatch, capsys, tm
         return tmp_path / "results.json"
 
     monkeypatch.setattr(train, "build_feature_dataset", fake_build_feature_dataset)
+    monkeypatch.setattr(train, "fit_fold_features", fake_fit_fold_features)
     monkeypatch.setattr(train, "train_xgboost_classifier", fake_train_xgboost_classifier)
     monkeypatch.setattr(train, "optimize_threshold", fake_optimize_threshold)
     monkeypatch.setattr(train, "save_results", fake_save_results)

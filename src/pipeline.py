@@ -55,7 +55,13 @@ def build_feature_dataset(
     max_subjects: Optional[int] = None,
     on_subject_loaded: Optional[Callable[[int, int, str], None]] = None,
 ) -> dict:
-    """Load matrices, extract features, and assemble the training design matrix."""
+    """Load matrices and extract raw, un-fitted features for the design matrix.
+
+    This returns engineered and connectivity features before any imputation,
+    scaling, or PCA. Those steps must be fit per cross-validation fold (see
+    ``fit_fold_features``) so that no held-out subject's data leaks into the
+    statistics used to build features for that same subject.
+    """
     selected_subjects = select_subjects(subjects=subjects, max_subjects=max_subjects)
     if not selected_subjects:
         raise ValueError("At least one subject is required to build the feature dataset")
@@ -70,6 +76,11 @@ def build_feature_dataset(
         subject_connectivity_matrices = load_subject_all_conditions(subject)
         for condition_idx in range(7):
             connectivity_matrix = subject_connectivity_matrices[condition_idx]
+            if np.isnan(connectivity_matrix).all():
+                # Scan missing or fully motion-censored: exclude the sample
+                # rather than fabricating a zero-connectivity observation.
+                continue
+
             features = extract_all_features(connectivity_matrix)
 
             all_connectivity_matrices.append(features["connectivity"])
@@ -77,6 +88,9 @@ def build_feature_dataset(
             features["condition"] = condition_idx
             features["label"] = 1 if condition_idx in CONSCIOUS_CONDITIONS else 0
             all_features.append(features)
+
+    if not all_features:
+        raise ValueError("No valid samples found: every connectivity matrix was missing or fully censored")
 
     feature_names_basic = [
         key for key in all_features[0].keys()
@@ -95,27 +109,54 @@ def build_feature_dataset(
         x_deviations[subject_mask] = subject_data - baseline
 
     x_engineered = np.hstack([x_basic, x_deviations])
-
-    imputer = SimpleImputer(strategy="median")
     x_connectivity = np.array(all_connectivity_matrices)
-    x_connectivity_clean = imputer.fit_transform(x_connectivity)
-    n_components = min(50, x_connectivity_clean.shape[0] - 1)
-    pca = PCA(n_components=n_components, random_state=RANDOM_STATE)
-    x_connectivity_pca = pca.fit_transform(x_connectivity_clean)
-
-    x_engineered_clean = imputer.fit_transform(x_engineered)
-    x_combined = np.hstack([x_engineered_clean, x_connectivity_pca])
 
     return {
         "subjects": selected_subjects,
         "subject_ids": subject_ids,
         "labels": labels,
-        "x_engineered": x_engineered_clean,
-        "x_combined": x_combined,
-        "engineered_feature_count": int(x_engineered_clean.shape[1]),
+        "x_engineered": x_engineered,
+        "x_connectivity": x_connectivity,
+        "engineered_feature_count": int(x_engineered.shape[1]),
+    }
+
+
+def fit_fold_features(
+    x_engineered_train: np.ndarray,
+    x_connectivity_train: np.ndarray,
+    x_engineered_test: np.ndarray,
+    x_connectivity_test: np.ndarray,
+    random_state: int = RANDOM_STATE,
+) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
+    """Fit imputation and PCA on the training fold only, then transform both folds.
+
+    Fitting these on the full dataset before cross-validation would let each
+    held-out subject's own connectivity data shape the PCA components and
+    median-imputation values used to build that same subject's test features.
+    Restricting the fit to the training fold keeps the held-out subject's data
+    genuinely unseen.
+    """
+    engineered_imputer = SimpleImputer(strategy="median")
+    x_engineered_train_clean = engineered_imputer.fit_transform(x_engineered_train)
+    x_engineered_test_clean = engineered_imputer.transform(x_engineered_test)
+
+    connectivity_imputer = SimpleImputer(strategy="median")
+    x_connectivity_train_clean = connectivity_imputer.fit_transform(x_connectivity_train)
+    x_connectivity_test_clean = connectivity_imputer.transform(x_connectivity_test)
+
+    n_components = max(1, min(50, x_connectivity_train_clean.shape[0] - 1, x_connectivity_train_clean.shape[1]))
+    pca = PCA(n_components=n_components, random_state=random_state)
+    x_connectivity_train_pca = pca.fit_transform(x_connectivity_train_clean)
+    x_connectivity_test_pca = pca.transform(x_connectivity_test_clean)
+
+    x_train_combined = np.hstack([x_engineered_train_clean, x_connectivity_train_pca])
+    x_test_combined = np.hstack([x_engineered_test_clean, x_connectivity_test_pca])
+
+    metadata = {
         "connectivity_components": int(n_components),
         "connectivity_variance_explained": float(pca.explained_variance_ratio_.sum()),
     }
+    return x_train_combined, x_test_combined, metadata
 
 
 def train_xgboost_classifier(
