@@ -47,7 +47,7 @@ If you are new to this repository, use this order:
 
 1. Create the pinned virtual environment and run `pytest` before touching the training scripts.
 2. Run `./run_quick_training.sh` before the full dataset path so you can confirm the public smoke workflow on a small supported subject set.
-3. Read `src/train.py`, `src/data_loader.py`, and `src/features.py` in that order to understand the pipeline from orchestration to raw feature construction.
+3. Read `src/train.py`, `src/pipeline.py`, `src/data_loader.py`, and `src/features.py` in that order to understand the pipeline from orchestration, to shared training/fold logic, to raw feature construction.
 4. Use the Testing and Default Model sections below to separate the verified current release contract from follow-up research work.
 
 ## How It Works
@@ -94,6 +94,7 @@ src/
   data_loader.py          # Load timeseries, motion filtering, connectivity matrices
   download_dataset.py     # OpenNeuro dataset downloader
   features.py             # Approximate ISD, graph metrics, connectivity feature extraction
+  pipeline.py             # Shared feature assembly and per-fold PCA/imputation fitting
   train.py                # Full training pipeline: XGBoost + PCA + SMOTE
   validate_model.py       # Overfitting checks and permutation tests
 
@@ -131,8 +132,6 @@ The reproducible public-release contract is the pinned lockfile path above: crea
 
 - Python 3.11+
 - Bash-compatible shell environment for the helper scripts
-- Roughly 350 MB of free disk space for the quick run
-- Roughly 1.8 GB of free disk space for the full download
 
 ## Default Model
 
