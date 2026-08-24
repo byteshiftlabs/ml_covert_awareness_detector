@@ -27,8 +27,8 @@ The commands below assume a Linux-like shell environment with Python 3.11+,
 
    sudo apt update
    sudo apt install git python3 python3-venv python3-pip
-   git clone https://github.com/byteshiftlabs/covert-awareness-detector.git
-   cd covert-awareness-detector
+   git clone https://github.com/byteshiftlabs/ml_covert_awareness_detector.git
+   cd ml_covert_awareness_detector
    python3 -m venv .venv
    source .venv/bin/activate
    pip install --upgrade pip setuptools wheel

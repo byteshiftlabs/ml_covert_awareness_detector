@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "covert-awareness-detector"
+name = "ml_covert_awareness_detector"
 version = "0.1.0"
 description = "Research-oriented ML pipeline for studying covert-awareness-related fMRI connectivity during anesthesia"
 readme = "README.md"

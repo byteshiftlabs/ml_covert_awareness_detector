@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/byteshiftlabs/covert-awareness-detector/actions/workflows/ci.yml/badge.svg)](https://github.com/byteshiftlabs/covert-awareness-detector/actions/workflows/ci.yml)
+[![CI](https://github.com/byteshiftlabs/ml_covert_awareness_detector/actions/workflows/ci.yml/badge.svg)](https://github.com/byteshiftlabs/ml_covert_awareness_detector/actions/workflows/ci.yml)
 [![DOI](https://img.shields.io/badge/Dataset-OpenNeuro%20ds006623-orange.svg)](https://openneuro.org/datasets/ds006623)
 
 Machine learning pipeline for studying covert-awareness-related fMRI functional
@@ -26,8 +26,8 @@ If `python3 --version` reports an older interpreter, install Python 3.11+ before
 
 ```bash
 # Clone and set up
-git clone https://github.com/byteshiftlabs/covert-awareness-detector.git
-cd covert-awareness-detector
+git clone https://github.com/byteshiftlabs/ml_covert_awareness_detector.git
+cd ml_covert_awareness_detector
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-lock.txt
 
